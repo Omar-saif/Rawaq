@@ -158,12 +158,12 @@ export default function AdminSidePromosPage() {
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {[
-            { href: "/admin",            label: "Dashboard",  icon: "📊" },
-            { href: "/admin/products",   label: "Products",   icon: "🛍️" },
+            { href: "/admin", label: "Dashboard", icon: "📊" },
+            { href: "/admin/products", label: "Products", icon: "🛍️" },
             { href: "/admin/categories", label: "Categories", icon: "📂" },
-            { href: "/admin/orders",     label: "Orders",     icon: "📦" },
-            { href: "/admin/coupons",    label: "Coupons",    icon: "🏷️" },
-            { href: "/admin/slides",     label: "Hero Slides",icon: "🎞️" },
+            { href: "/admin/orders", label: "Orders", icon: "📦" },
+            { href: "/admin/coupons", label: "Coupons", icon: "🏷️" },
+            { href: "/admin/slides", label: "Hero Slides", icon: "🎞️" },
             { href: "/admin/promo-posters", label: "Promo Posters", icon: "🖼️" },
             { href: "/admin/delivery-vendors", label: "Delivery", icon: "🚚" },
             { href: "/admin/side-promos", label: "Side Promos", icon: "📢" },
