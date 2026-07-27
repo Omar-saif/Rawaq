@@ -45,7 +45,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   if (data.parentId) {
     const parent = await prisma.category.findUnique({ where: { id: data.parentId } });
-    if (!parent) return apiError(ErrorCodes.NOT_FOUND);
+    if (!parent) return apiError(ErrorCodes.NOT_FOUND, "Parent category not found", 404);
     // Prevent circular: a parent cannot have a parent itself with parentId = new cat's id (simple check)
     if (parent.parentId) {
       return apiError(ErrorCodes.VALIDATION_ERROR, "Categories can only be nested one level deep", 400);

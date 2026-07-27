@@ -28,7 +28,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 // POST /api/admin/promo-posters
 export const POST = withErrorHandler(async (req: NextRequest) => {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") return apiError(ErrorCodes.UNAUTHORIZED);
+  if (!session || session.role !== "ADMIN") return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 
   const body = await req.json();
   const data = PromoPosterSchema.parse(body);
