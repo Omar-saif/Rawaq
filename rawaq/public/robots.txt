@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Block admin and account routes from indexing
+Disallow: /en/admin/
+Disallow: /ar/admin/
+Disallow: /en/account/
+Disallow: /ar/account/
+Disallow: /en/checkout/
+Disallow: /ar/checkout/
+Disallow: /en/cart/
+Disallow: /ar/cart/
+
+# Block API routes
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://rawaq.sa/sitemap.xml

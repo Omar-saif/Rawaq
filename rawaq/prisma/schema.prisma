@@ -1,0 +1,294 @@
+// This is your Prisma schema file.
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Decision log: Using PostgreSQL as the primary database; schema designed for
+// a bilingual (EN/AR) Islamic fashion + perfume e-commerce platform.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// ── User & Address ────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  phone        String?
+  passwordHash String
+  name         String
+  role         Role      @default(CUSTOMER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  addresses Address[]
+  orders    Order[]
+
+  // Password reset tokens (hashed, single-use)
+  resetTokenHash   String?
+  resetTokenExpiry DateTime?
+
+  @@index([email])
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  street     String
+  city       String
+  country    String  @default("SA")
+  postalCode String?
+  isDefault  Boolean @default(false)
+
+  @@index([userId])
+}
+
+// ── Category ─────────────────────────────────────────────────────────────────
+// attributeSchema is a Json field with the intended shape:
+//   Array<{
+//     key:    string;          // e.g. "fabric", "scent", "size"
+//     label:  string;          // e.g. "Fabric Type", "Scent Notes"
+//     type:   "text" | "select" | "multiselect" | "range" | "boolean";
+//     options?: string[];      // for select/multiselect types
+//   }>
+// This allows admins to define per-category filter attributes without migrations.
+
+model Category {
+  id              String     @id @default(cuid())
+  name            String
+  nameAr          String     @default("")
+  slug            String     @unique
+  parentId        String?
+  parent          Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryTree")
+  attributeSchema Json       @default("[]")
+  imageUrl        String?
+  isActive        Boolean    @default(true)
+  sortOrder       Int        @default(0)
+
+  products Product[]
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+// ── Product & Variant ─────────────────────────────────────────────────────────
+
+model Product {
+  id             String   @id @default(cuid())
+  title          String
+  titleAr        String   @default("")
+  slug           String   @unique
+  sku            String   @unique
+  description    String   @default("")
+  descriptionAr  String   @default("")
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id])
+  images         String[] // Array of image URLs
+  price          Decimal  @db.Decimal(10, 2)
+  salePrice      Decimal? @db.Decimal(10, 2)
+  inventoryCount Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  variants   ProductVariant[]
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+// variantType examples:
+//   "size"   → value could be "50", "52", "54" (collar/length cm for Thobes)
+//   "volume" → value could be "30ml", "50ml", "100ml" (for perfumes)
+//   "color"  → value could be "White", "Black", "Beige"
+
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantType   String   // e.g. "size", "volume", "color"
+  value         String   // e.g. "52", "100ml", "White"
+  skuSuffix     String   // appended to parent SKU: SKU-52, SKU-100ML
+  stockCount    Int      @default(0)
+  priceModifier Decimal? @db.Decimal(10, 2) // null means same as parent price
+
+  orderItems OrderItem[]
+
+  @@index([productId])
+}
+
+// ── Coupon ────────────────────────────────────────────────────────────────────
+
+model Coupon {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+  minCartValue  Decimal?     @db.Decimal(10, 2)
+  expiresAt     DateTime?
+  usageLimit    Int          @default(1)
+  timesUsed     Int          @default(0)
+  isActive      Boolean      @default(true)
+
+  orders Order[]
+
+  @@index([code])
+}
+
+// ── Order & OrderItem ─────────────────────────────────────────────────────────
+// shippingAddress is a JSON snapshot of the address at order time.
+// This intentionally does NOT use a live FK so past orders survive address edits/deletions.
+//
+// shippingAddress shape:
+//   { street: string; city: string; country: string; postalCode?: string; }
+
+model Order {
+  id              String      @id @default(cuid())
+  // Registered user (nullable for guest checkout)
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id])
+  // Guest checkout fields (at least one of userId or guestEmail must be set)
+  guestEmail      String?
+  guestPhone      String?
+  status          OrderStatus @default(PENDING)
+  subtotal        Decimal     @db.Decimal(10, 2)
+  discountAmount  Decimal     @db.Decimal(10, 2) @default(0)
+  total           Decimal     @db.Decimal(10, 2)
+  couponId        String?
+  coupon          Coupon?     @relation(fields: [couponId], references: [id])
+  deliveryVendorId String?
+  deliveryVendor   DeliveryVendor? @relation(fields: [deliveryVendorId], references: [id])
+  shippingAddress Json        // snapshot, not a live FK
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String         @id @default(cuid())
+  orderId   String
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product        @relation(fields: [productId], references: [id])
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  quantity  Int
+  unitPrice Decimal        @db.Decimal(10, 2)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// ── Hero Slider ───────────────────────────────────────────────────────────────
+// Decision: Slide model replaces the earlier product/category flag-based
+// approach for the home page hero. All slides are fully managed from the
+// admin dashboard — no code changes needed to add, edit, or schedule slides.
+
+model Slide {
+  id        String    @id @default(cuid())
+  title     String
+  titleAr   String    @default("")
+  subtitle  String?
+  subtitleAr String?
+  imageUrl  String
+  ctaLabel  String?
+  ctaLabelAr String?
+  ctaLink   String?
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([startsAt, endsAt])
+}
+
+// ── Promo Poster (Home Page) ──────────────────────────────────────────────────
+
+model PromoPoster {
+  id        String    @id @default(cuid())
+  imageUrl  String
+  linkUrl   String?
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([startsAt, endsAt])
+}
+
+// ── Side Promo (Sidebar banner) ───────────────────────────────────────────────
+
+model SidePromo {
+  id          String    @id @default(cuid())
+  imageUrl    String
+  linkUrl     String?
+  isActive    Boolean   @default(true)
+  targetPages String[]  // e.g. ["category", "product", "cart"]
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive])
+}
+
+// ── Delivery Vendor (Checkout Options) ────────────────────────────────────────
+
+model DeliveryVendor {
+  id            String    @id @default(cuid())
+  name          String
+  nameAr        String    @default("")
+  logoUrl       String?
+  description   String?
+  descriptionAr String?
+  estimatedDays String
+  estimatedDaysAr String @default("")
+  price         Decimal   @db.Decimal(10, 2)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  orders        Order[]
+
+  @@index([isActive])
+}
+

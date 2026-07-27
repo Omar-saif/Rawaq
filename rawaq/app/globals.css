@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+/* ── Rawaq Design Tokens ─────────────────────────────────────────── */
+@theme inline {
+  /* Brand Colors */
+  --color-brand-navy:      #0B1B3D;
+  --color-brand-navy-light: #1a2f5e;
+  --color-brand-navy-dark: #060f22;
+  --color-brand-gold:      #C9A96E;
+  --color-brand-gold-light: #dfc08e;
+  --color-brand-gold-dark:  #a8843e;
+
+  /* Neutral Grays */
+  --color-gray-50:  #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Semantic */
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --color-muted:      #6b7280;
+  --color-border:     #e5e7eb;
+  --color-success:    #16a34a;
+  --color-error:      #dc2626;
+  --color-warning:    #d97706;
+
+  /* Typography */
+  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-arabic: var(--font-noto-arabic), 'Noto Naskh Arabic', serif;
+
+  /* Spacing / Sizing */
+  --radius-sm:  0.25rem;
+  --radius-md:  0.5rem;
+  --radius-lg:  0.75rem;
+  --radius-xl:  1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:  0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Transitions */
+  --transition-fast:   150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow:   400ms ease;
+}
+
+/* ── Base Styles ──────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* RTL support */
+[dir="rtl"] body {
+  font-family: var(--font-arabic), var(--font-sans);
+}
+
+/* ── Focus ring ──────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-brand-navy);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-gray-100);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
+}
+
+/* ── Selection ───────────────────────────────────────────────────── */
+::selection {
+  background-color: color-mix(in srgb, var(--color-brand-navy) 20%, transparent);
+  color: var(--color-brand-navy);
+}
+
+/* ── Utility animations ──────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in    { animation: fadeIn 300ms ease forwards; }
+.animate-slide-right { animation: slideInRight 300ms ease forwards; }
+.animate-slide-left  { animation: slideInLeft 300ms ease forwards; }
+.animate-slide-down  { animation: slideDown 250ms ease forwards; }
+.animate-scale-in    { animation: scaleIn 200ms ease forwards; }
+.animate-spin        { animation: spin 1s linear infinite; }
+.animate-pulse       { animation: pulse 2s ease infinite; }
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-gray-200) 25%,
+    var(--color-gray-100) 50%,
+    var(--color-gray-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ── Logical properties for RTL support ─────────────────────────── */
+.ms-auto { margin-inline-start: auto; }
+.me-auto { margin-inline-end: auto; }
+
+/* ── Hero slider progress bar ───────────────────────────────────── */
+@keyframes progress-bar {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
