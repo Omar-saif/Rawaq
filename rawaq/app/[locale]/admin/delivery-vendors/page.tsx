@@ -289,7 +289,7 @@ export default function AdminDeliveryVendorsPage() {
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-[var(--color-border)]">
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Vendor"}</Button>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default function AdminDeliveryVendorsPage() {
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Vendor">
         <p className="mb-6 text-[var(--color-gray-600)]">Are you sure you want to delete this delivery vendor? This action cannot be undone.</p>
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button variant="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
           <Button onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700 border-red-600 text-white">
             {deleting ? "Deleting..." : "Delete"}
           </Button>

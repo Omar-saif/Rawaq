@@ -230,8 +230,8 @@ export default function AdminSidePromosPage() {
                         </button>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => openEdit(promo)}>Edit</Button>
-                        <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setDeleteTarget(promo)}>Delete</Button>
+                        <Button variant="secondary" size="sm" onClick={() => openEdit(promo)}>Edit</Button>
+                        <Button variant="secondary" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setDeleteTarget(promo)}>Delete</Button>
                       </td>
                     </tr>
                   ))}
@@ -293,7 +293,7 @@ export default function AdminSidePromosPage() {
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-[var(--color-border)]">
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={() => setFormOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Promo"}</Button>
           </div>
         </div>
@@ -302,7 +302,7 @@ export default function AdminSidePromosPage() {
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Promo">
         <p className="mb-6 text-[var(--color-gray-600)]">Are you sure you want to delete this side promo banner? This action cannot be undone.</p>
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button variant="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
           <Button onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700 border-red-600 text-white">
             {deleting ? "Deleting..." : "Delete"}
           </Button>
