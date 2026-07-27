@@ -215,7 +215,7 @@ export default function AdminSidePromosPage() {
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1">
                           {promo.targetPages.map(tp => (
-                            <Badge key={tp} variant="default" className="text-xs bg-[var(--color-brand-navy)] text-white">{tp}</Badge>
+                            <Badge key={tp} variant="navy" className="text-xs">{tp}</Badge>
                           ))}
                         </div>
                       </td>
@@ -226,7 +226,7 @@ export default function AdminSidePromosPage() {
                       </td>
                       <td className="px-6 py-4">
                         <button onClick={() => toggleActive(promo)} className="hover:opacity-80 transition-opacity">
-                          <Badge variant={promo.isActive ? "success" : "default"}>{promo.isActive ? "Active" : "Hidden"}</Badge>
+                          <Badge variant={promo.isActive ? "success" : "gray"}>{promo.isActive ? "Active" : "Hidden"}</Badge>
                         </button>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">

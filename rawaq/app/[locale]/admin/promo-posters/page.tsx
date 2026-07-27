@@ -242,7 +242,7 @@ export default function AdminPromoPostersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <button onClick={() => toggleActive(poster)} className="hover:opacity-80 transition-opacity">
-                          <Badge variant={poster.isActive ? "success" : "default"}>{poster.isActive ? "Active" : "Hidden"}</Badge>
+                          <Badge variant={poster.isActive ? "success" : "gray"}>{poster.isActive ? "Active" : "Hidden"}</Badge>
                         </button>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
