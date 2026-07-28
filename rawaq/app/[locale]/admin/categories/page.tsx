@@ -5,6 +5,7 @@ import { Link } from "@/lib/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal, useToast } from "@/components/ui/Modal";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 interface Category {
   id: string; name: string; nameAr: string; slug: string;
@@ -12,15 +13,7 @@ interface Category {
   children?: Category[];
 }
 
-const ADMIN_NAV = [
-  { href: "/admin", label: "Dashboard", icon: "📊" },
-  { href: "/admin/products", label: "Products", icon: "🛍️" },
-  { href: "/admin/categories", label: "Categories", icon: "📂", active: true },
-  { href: "/admin/orders", label: "Orders", icon: "📦" },
-  { href: "/admin/coupons", label: "Coupons", icon: "🏷️" },
-  { href: "/admin/slides", label: "Hero Slides", icon: "🎞️" },
-  { href: "/account", label: "My Account", icon: "👤" },
-];
+
 
 const EMPTY = { name: "", nameAr: "", slug: "", parentId: "", attributeSchema: "[]" };
 
@@ -109,19 +102,7 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-gray-50)] flex">
-      <aside className="w-64 bg-[var(--color-brand-navy)] text-white flex flex-col shrink-0">
-        <div className="p-6 border-b border-white/10">
-          <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand-gold)] mb-1">RAWAQ</p>
-          <h1 className="text-lg font-bold">Admin Panel</h1>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {ADMIN_NAV.map(item => (
-            <Link key={item.href} href={item.href as any} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${item.active ? "bg-white/15 text-white" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
-              <span>{item.icon}</span>{item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
+      <AdminSidebar />
 
       <main className="flex-1 p-8 overflow-auto">
         <div className="flex items-center justify-between mb-8">

@@ -4,6 +4,7 @@ import { getLocale } from "next-intl/server";
 import { getSession } from "@/lib/utils/session";
 import { prisma } from "@/lib/db/prisma";
 import { Link } from "@/lib/i18n/navigation";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin Dashboard | Rawaq" };
@@ -39,36 +40,11 @@ export default async function AdminDashboard() {
     CANCELLED: "bg-red-100 text-red-800",
   };
 
-  const navItems = [
-    { href: "/admin", label: "Dashboard", icon: "📊" },
-    { href: "/admin/products", label: "Products", icon: "🛍️" },
-    { href: "/admin/categories", label: "Categories", icon: "📂" },
-    { href: "/admin/orders", label: "Orders", icon: "📦" },
-    { href: "/admin/coupons", label: "Coupons", icon: "🏷️" },
-    { href: "/account", label: "My Account", icon: "👤" },
-  ];
+
 
   return (
     <div className="min-h-screen bg-[var(--color-gray-50)] flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-[var(--color-brand-navy)] text-white flex flex-col">
-        <div className="p-6 border-b border-white/10">
-          <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand-gold)] mb-1">RAWAQ</p>
-          <h1 className="text-lg font-bold">Admin Panel</h1>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href as Parameters<typeof Link>[0]["href"]}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all"
-            >
-              <span>{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
+      <AdminSidebar />
 
       {/* Main content */}
       <main className="flex-1 p-8 overflow-auto">
