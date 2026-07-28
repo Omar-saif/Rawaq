@@ -13,17 +13,17 @@ const ProductSchema = z.object({
   description: z.string().optional().default(""),
   descriptionAr: z.string().optional().default(""),
   categoryId: z.string().min(1),
-  images: z.array(z.string().url()).min(1, "At least one image required"),
-  price: z.number().positive(),
-  salePrice: z.number().positive().nullable().optional(),
-  inventoryCount: z.number().int().min(0).default(0),
+  images: z.array(z.string().min(1)).min(1, "At least one image required"),
+  price: z.coerce.number().positive(),
+  salePrice: z.coerce.number().positive().nullable().optional(),
+  inventoryCount: z.coerce.number().int().min(0).default(0),
   isActive: z.boolean().default(true),
   variants: z.array(z.object({
     variantType: z.string().min(1),
     value: z.string().min(1),
     skuSuffix: z.string().min(1),
-    stockCount: z.number().int().min(0),
-    priceModifier: z.number().nullable().optional(),
+    stockCount: z.coerce.number().int().min(0),
+    priceModifier: z.coerce.number().nullable().optional(),
   })).optional().default([]),
 });
 

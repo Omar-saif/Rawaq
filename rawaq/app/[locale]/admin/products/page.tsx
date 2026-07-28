@@ -135,8 +135,9 @@ export default function AdminProductsPage() {
     }
     setSaving(true);
     try {
+      const generatedSlug = form.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
       const payload = {
-        title: form.title, titleAr: form.titleAr, sku: form.sku,
+        title: form.title, titleAr: form.titleAr, sku: form.sku, slug: generatedSlug,
         price: parseFloat(form.price), salePrice: form.salePrice ? parseFloat(form.salePrice) : null,
         inventoryCount: parseInt(form.inventoryCount) || 0,
         categoryId: form.categoryId, isActive: form.isActive,

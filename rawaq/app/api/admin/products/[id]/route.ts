@@ -7,14 +7,24 @@ import { requireAdmin } from "@/lib/utils/session";
 const UpdateProductSchema = z.object({
   title: z.string().min(1).optional(),
   titleAr: z.string().optional(),
+  slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
+  sku: z.string().min(1).optional(),
   description: z.string().optional(),
   descriptionAr: z.string().optional(),
   categoryId: z.string().optional(),
   images: z.array(z.string()).optional(),
-  price: z.number().positive().optional(),
-  salePrice: z.number().positive().nullable().optional(),
-  inventoryCount: z.number().int().min(0).optional(),
+  price: z.coerce.number().positive().optional(),
+  salePrice: z.coerce.number().positive().nullable().optional(),
+  inventoryCount: z.coerce.number().int().min(0).optional(),
   isActive: z.boolean().optional(),
+  variants: z.array(z.object({
+    id: z.string().optional(),
+    variantType: z.string().min(1),
+    value: z.string().min(1),
+    skuSuffix: z.string().min(1),
+    stockCount: z.coerce.number().int().min(0),
+    priceModifier: z.coerce.number().nullable().optional(),
+  })).optional(),
 });
 
 type Ctx = { params: Promise<{ id: string }> };
