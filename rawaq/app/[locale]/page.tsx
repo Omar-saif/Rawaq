@@ -14,6 +14,8 @@ export const metadata: Metadata = {
     "Shop the finest Thobes, Abayas, Oud, and Attar at Rawaq. Premium Islamic fashion and Arabic perfumes, crafted with tradition.",
 };
 
+export const revalidate = 60; // Enable ISR so Prisma queries refresh in production
+
 import { prisma } from "@/lib/db/prisma";
 
 async function getCategories() {
