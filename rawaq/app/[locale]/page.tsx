@@ -14,14 +14,14 @@ export const metadata: Metadata = {
     "Shop the finest Thobes, Abayas, Oud, and Attar at Rawaq. Premium Islamic fashion and Arabic perfumes, crafted with tradition.",
 };
 
+import { prisma } from "@/lib/db/prisma";
+
 async function getCategories() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, {
-      next: { revalidate: 3600 },
+    return await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" }
     });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data ?? [];
   } catch {
     return [];
   }
@@ -29,13 +29,25 @@ async function getCategories() {
 
 async function getFeaturedProducts() {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/products?sort=newest&pageSize=8`,
-      { next: { revalidate: 1800 } }
-    );
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data ?? [];
+    const products = await prisma.product.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      include: {
+        variants: true,
+        category: { select: { name: true, nameAr: true, slug: true } }
+      }
+    });
+    // Serialize Decimals for Client
+    return products.map(p => ({
+      ...p,
+      price: parseFloat(p.price.toString()),
+      salePrice: p.salePrice ? parseFloat(p.salePrice.toString()) : null,
+      variants: p.variants.map(v => ({
+        ...v,
+        priceModifier: v.priceModifier ? parseFloat(v.priceModifier.toString()) : null
+      }))
+    }));
   } catch {
     return [];
   }
@@ -43,12 +55,21 @@ async function getFeaturedProducts() {
 
 async function getSlides(): Promise<SlideData[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/slides`, {
-      next: { revalidate: 60 }, // revalidate every 60s so schedule changes take effect quickly
+    const now = new Date();
+    return await prisma.slide.findMany({
+      where: {
+        isActive: true,
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [
+          { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }
+        ]
+      },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        id: true, title: true, titleAr: true, subtitle: true, subtitleAr: true,
+        imageUrl: true, ctaLabel: true, ctaLabelAr: true, ctaLink: true
+      }
     });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data ?? [];
   } catch {
     return [];
   }
@@ -62,12 +83,18 @@ export interface PromoPosterData {
 
 async function getPromoPosters(): Promise<PromoPosterData[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/promo-posters`, {
-      next: { revalidate: 60 },
+    const now = new Date();
+    return await prisma.promoPoster.findMany({
+      where: {
+        isActive: true,
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [
+          { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }
+        ]
+      },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, imageUrl: true, linkUrl: true }
     });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data ?? [];
   } catch {
     return [];
   }
