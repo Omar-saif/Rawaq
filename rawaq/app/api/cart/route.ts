@@ -14,7 +14,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   }
 
   const cart = await prisma.cart.findUnique({
-    where: { userId: session.id },
+    where: { userId: session.userId },
     include: {
       items: {
         include: {

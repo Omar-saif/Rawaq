@@ -19,9 +19,9 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const { productId, variantId, quantity } = CartItemSchema.parse(body);
 
   // Get or create cart
-  let cart = await prisma.cart.findUnique({ where: { userId: session.id } });
+  let cart = await prisma.cart.findUnique({ where: { userId: session.userId } });
   if (!cart) {
-    cart = await prisma.cart.create({ data: { userId: session.id } });
+    cart = await prisma.cart.create({ data: { userId: session.userId } });
   }
 
   // Check existing item

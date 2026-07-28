@@ -92,7 +92,7 @@ export const PATCH = withErrorHandler(async (req: NextRequest, ctx: unknown) => 
   });
 
   await logAdminAction({
-    adminId: session.id, // Assuming requireAdmin returns session, let's fix that
+    adminId: session.userId,
     action: "UPDATE_ORDER_STATUS",
     resource: "Order",
     resourceId: id,

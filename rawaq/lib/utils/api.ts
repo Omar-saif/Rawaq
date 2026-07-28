@@ -83,7 +83,7 @@ export function withErrorHandler(handler: RouteHandler): RouteHandler {
       if (err instanceof ZodError) {
         return apiError(
           ErrorCodes.VALIDATION_ERROR,
-          "Invalid request data",
+          `Invalid request data: ${JSON.stringify(err.flatten().fieldErrors)}`,
           400,
           err.flatten().fieldErrors
         );

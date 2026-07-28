@@ -9,16 +9,17 @@ const UpdateCartItemSchema = z.object({
 });
 
 // PATCH /api/cart/items/[id]
-export const PATCH = withErrorHandler(async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
+export const PATCH = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
   const session = await getSession();
   if (!session) return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 
-  const { id } = await ctx.params;
+  const { params } = ctx as { params: Promise<{ id: string }> };
+  const { id } = await params;
   const body = await req.json();
   const { quantity } = UpdateCartItemSchema.parse(body);
 
   const item = await prisma.cartItem.findUnique({ where: { id }, include: { cart: true } });
-  if (!item || item.cart.userId !== session.id) {
+  if (!item || item.cart.userId !== session.userId) {
     return apiError(ErrorCodes.NOT_FOUND, "Cart item not found", 404);
   }
 
@@ -36,14 +37,15 @@ export const PATCH = withErrorHandler(async (req: NextRequest, ctx: { params: Pr
 });
 
 // DELETE /api/cart/items/[id]
-export const DELETE = withErrorHandler(async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
+export const DELETE = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
   const session = await getSession();
   if (!session) return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 
-  const { id } = await ctx.params;
+  const { params } = ctx as { params: Promise<{ id: string }> };
+  const { id } = await params;
 
   const item = await prisma.cartItem.findUnique({ where: { id }, include: { cart: true } });
-  if (!item || item.cart.userId !== session.id) {
+  if (!item || item.cart.userId !== session.userId) {
     return apiError(ErrorCodes.NOT_FOUND, "Cart item not found", 404);
   }
 

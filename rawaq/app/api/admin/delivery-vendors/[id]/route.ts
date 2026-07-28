@@ -16,11 +16,12 @@ const DeliveryVendorUpdateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export const PUT = withErrorHandler(async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
+export const PUT = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
+  const { params } = ctx as { params: Promise<{ id: string }> };
+  const { id } = await params;
   const session = await getSession();
   if (!session || session.role !== "ADMIN") return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 
-  const { id } = await (ctx.params as Promise<{id: string}>);
   const body = await req.json();
   const data = DeliveryVendorUpdateSchema.parse(body);
 
@@ -32,11 +33,12 @@ export const PUT = withErrorHandler(async (req: NextRequest, ctx: { params: Prom
   return apiSuccess(updated);
 });
 
-export const DELETE = withErrorHandler(async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
+export const DELETE = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
+  const { params } = ctx as { params: Promise<{ id: string }> };
+  const { id } = await params;
   const session = await getSession();
   if (!session || session.role !== "ADMIN") return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 
-  const { id } = await (ctx.params as Promise<{id: string}>);
   await prisma.deliveryVendor.delete({ where: { id } });
 
   return apiSuccess(null);

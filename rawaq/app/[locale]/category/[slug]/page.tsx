@@ -78,15 +78,6 @@ async function getAllCategories() {
   } catch { return []; }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const category = await getCategory(slug);
-  if (!category) return { title: "Category Not Found" };
-  return {
-    title: `${category.name} | Rawaq`,
-    description: `Shop ${category.name} at Rawaq — premium Islamic fashion and Arabic perfumes.`,
-  };
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, locale } = await params;

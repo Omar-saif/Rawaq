@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: PageProps) {
     ...product,
     price: parseFloat(product.price.toString()),
     salePrice: product.salePrice ? parseFloat(product.salePrice.toString()) : null,
-    variants: product.variants.map((v) => ({
+    variants: product.variants.map((v: any) => ({
       ...v,
       priceModifier: v.priceModifier ? parseFloat(v.priceModifier.toString()) : null,
     })),

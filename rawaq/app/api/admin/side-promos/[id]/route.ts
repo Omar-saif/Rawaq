@@ -14,11 +14,12 @@ const SidePromoUpdateSchema = z.object({
 });
 
 // PUT /api/admin/side-promos/[id]
-export const PUT = withErrorHandler(async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
+export const PUT = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 
-  const { id } = await (ctx.params as Promise<{id: string}>);
+  const { params } = ctx as { params: Promise<{ id: string }> };
+  const { id } = await params;
   const body = await req.json();
   const data = SidePromoUpdateSchema.parse(body);
 
@@ -35,11 +36,12 @@ export const PUT = withErrorHandler(async (req: NextRequest, ctx: { params: Prom
 });
 
 // DELETE /api/admin/side-promos/[id]
-export const DELETE = withErrorHandler(async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
+export const DELETE = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 
-  const { id } = await (ctx.params as Promise<{id: string}>);
+  const { params } = ctx as { params: Promise<{ id: string }> };
+  const { id } = await params;
   await prisma.sidePromo.delete({ where: { id } });
 
   return apiSuccess(null);
