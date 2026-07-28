@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { Prisma } from "@prisma/client";
 import { apiSuccess, withErrorHandler } from "@/lib/utils/api";
 
 // GET /api/side-promos?pageType=...
@@ -9,7 +10,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   const now = new Date();
   
-  const whereClause: any = {
+  const whereClause: Prisma.SidePromoWhereInput = {
     isActive: true,
     OR: [
       { startsAt: null, endsAt: null },

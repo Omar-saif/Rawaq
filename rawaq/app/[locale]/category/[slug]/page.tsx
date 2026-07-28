@@ -14,19 +14,27 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }
 
-async function getCategory(slug: string) {
+interface CategoryNode {
+  id: string;
+  name: string;
+  nameAr: string;
+  slug: string;
+  children?: CategoryNode[];
+}
+
+async function getCategory(slug: string): Promise<CategoryNode | null> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, {
       next: { revalidate: 3600 },
     });
     if (!res.ok) return null;
     const json = await res.json();
-    const cats: any[] = json.data ?? [];
+    const cats: CategoryNode[] = json.data ?? [];
     // Find in top-level or children
     for (const cat of cats) {
       if (cat.slug === slug) return cat;
       if (cat.children) {
-        const sub = cat.children.find((c: any) => c.slug === slug);
+        const sub = cat.children.find((c) => c.slug === slug);
         if (sub) return sub;
       }
     }

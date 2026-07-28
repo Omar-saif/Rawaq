@@ -17,8 +17,13 @@ async function getCategories() {
   } catch { return []; }
 }
 
-function flatten(cats: any[]): any[] {
-  return cats.flatMap((c: any) => [c, ...flatten(c.children ?? [])]);
+interface CategoryNode {
+  slug: string;
+  children?: CategoryNode[];
+}
+
+function flatten(cats: CategoryNode[]): CategoryNode[] {
+  return cats.flatMap((c) => [c, ...flatten(c.children ?? [])]);
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

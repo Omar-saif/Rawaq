@@ -16,7 +16,7 @@ const DeliveryVendorUpdateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export const PUT = withErrorHandler(async (req: NextRequest, ctx: any) => {
+export const PUT = withErrorHandler(async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 
@@ -32,7 +32,7 @@ export const PUT = withErrorHandler(async (req: NextRequest, ctx: any) => {
   return apiSuccess(updated);
 });
 
-export const DELETE = withErrorHandler(async (req: NextRequest, ctx: any) => {
+export const DELETE = withErrorHandler(async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 

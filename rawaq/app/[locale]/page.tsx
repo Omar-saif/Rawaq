@@ -54,7 +54,13 @@ async function getSlides(): Promise<SlideData[]> {
   }
 }
 
-async function getPromoPosters() {
+export interface PromoPosterData {
+  id: string;
+  imageUrl: string;
+  linkUrl: string | null;
+}
+
+async function getPromoPosters(): Promise<PromoPosterData[]> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/promo-posters`, {
       next: { revalidate: 60 },
@@ -88,7 +94,7 @@ export default async function HomePage() {
           <section className="py-20 bg-white">
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {promoPosters.map((poster: any) => {
+                {promoPosters.map((poster) => {
                   const content = (
                     <div className="relative w-full aspect-[4/5] rounded-[var(--radius-2xl)] overflow-hidden group">
                       <Image
