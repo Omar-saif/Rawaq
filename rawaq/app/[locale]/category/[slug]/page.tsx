@@ -88,6 +88,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug, locale } = await params;
+  const category = await getCategory(slug);
+  
+  if (!category) return { title: "Category Not Found" };
+  
+  const title = locale === "ar" && category.nameAr ? category.nameAr : category.name;
+  return {
+    title: `${title} | Rawaq`,
+    description: `Shop the latest ${title} products at Rawaq.`,
+  };
+}
+
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;

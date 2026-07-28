@@ -70,14 +70,32 @@ export default async function ProductPage({ params }: PageProps) {
     ...product,
     price: parseFloat(product.price.toString()),
     salePrice: product.salePrice ? parseFloat(product.salePrice.toString()) : null,
-    variants: product.variants.map((v: any) => ({
+    variants: product.variants.map((v) => ({
       ...v,
       priceModifier: v.priceModifier ? parseFloat(v.priceModifier.toString()) : null,
     })),
   };
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: locale === "ar" && product.titleAr ? product.titleAr : product.title,
+    description: locale === "ar" && product.descriptionAr ? product.descriptionAr : product.description,
+    image: product.images?.[0] ? [product.images[0]] : [],
+    offers: {
+      "@type": "Offer",
+      price: normalized.salePrice ?? normalized.price,
+      priceCurrency: "SAR",
+      availability: normalized.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    }
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header categories={categories} />
       <main className="flex-1 bg-white">
         {/* Breadcrumb */}
