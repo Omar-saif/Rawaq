@@ -20,6 +20,7 @@ const NAV_GROUPS = [
       { href: "/admin/slides",          label: "Hero Slides",   icon: "🎞️" },
       { href: "/admin/promo-posters",   label: "Promo Posters", icon: "🖼️" },
       { href: "/admin/side-promos",     label: "Side Promos",   icon: "📢" },
+      { href: "/admin/audit-log",       label: "Audit Logs",    icon: "📋" },
     ],
   },
   {

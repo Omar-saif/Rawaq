@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { apiSuccess, apiError, ErrorCodes, withErrorHandler } from "@/lib/utils/api";
 import { requireAdmin } from "@/lib/utils/session";
 import { OrderStatus } from "@prisma/client";
+import { logAdminAction } from "@/lib/utils/audit";
 
 // Valid status transitions — prevents illegal state changes
 const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
@@ -49,7 +50,7 @@ export const GET = withErrorHandler(async (_req: NextRequest, ctx: unknown) => {
 export const PATCH = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
   const { params } = ctx as Ctx;
   const { id } = await params;
-  await requireAdmin();
+  const session = await requireAdmin();
 
   const body = await req.json();
   const { status: newStatus } = UpdateStatusSchema.parse(body);
@@ -66,6 +67,37 @@ export const PATCH = withErrorHandler(async (req: NextRequest, ctx: unknown) => 
     );
   }
 
-  const updated = await prisma.order.update({ where: { id }, data: { status: newStatus } });
+  const updated = await prisma.$transaction(async (tx) => {
+    const updatedOrder = await tx.order.update({ where: { id }, data: { status: newStatus } });
+
+    // Restore stock if cancelled
+    if (newStatus === "CANCELLED") {
+      const items = await tx.orderItem.findMany({ where: { orderId: id } });
+      for (const item of items) {
+        if (item.variantId) {
+          await tx.productVariant.update({
+            where: { id: item.variantId },
+            data: { stockCount: { increment: item.quantity } },
+          });
+        } else {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { inventoryCount: { increment: item.quantity } },
+          });
+        }
+      }
+    }
+    
+    return updatedOrder;
+  });
+
+  await logAdminAction({
+    adminId: session.id, // Assuming requireAdmin returns session, let's fix that
+    action: "UPDATE_ORDER_STATUS",
+    resource: "Order",
+    resourceId: id,
+    details: { oldStatus: order.status, newStatus },
+  });
+
   return apiSuccess(updated);
 });

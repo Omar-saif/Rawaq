@@ -46,6 +46,8 @@ model User {
 
   addresses Address[]
   orders    Order[]
+  cart      Cart?
+  auditLogs AuditLog[] @relation("AdminAuditLogs")
 
   // Password reset tokens (hashed, single-use)
   resetTokenHash   String?
@@ -118,6 +120,7 @@ model Product {
 
   variants   ProductVariant[]
   orderItems OrderItem[]
+  cartItems  CartItem[]
 
   @@index([categoryId])
   @@index([slug])
@@ -141,6 +144,7 @@ model ProductVariant {
   priceModifier Decimal? @db.Decimal(10, 2) // null means same as parent price
 
   orderItems OrderItem[]
+  cartItems  CartItem[]
 
   @@index([productId])
 }
@@ -290,5 +294,46 @@ model DeliveryVendor {
   orders        Order[]
 
   @@index([isActive])
+}
+
+
+// -- Cart & CartItem (Persistent Cart) ------------------------------------------
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?    @unique // null for guest cart
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  items     CartItem[]
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  quantity  Int
+
+  @@unique([cartId, productId, variantId])
+}
+
+// -- Admin Audit Log ------------------------------------------------------------
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  admin       User     @relation("AdminAuditLogs", fields: [adminId], references: [id], onDelete: Cascade)
+  action      String   // e.g., "UPDATE_PRODUCT", "DELETE_CATEGORY"
+  resource    String   // e.g., "Product", "Category"
+  resourceId  String?
+  details     Json?    
+  createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
 }
 
