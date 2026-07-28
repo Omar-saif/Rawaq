@@ -10,5 +10,6 @@ export const config = {
   // - /_vercel (Vercel internals)
   // - Static files (images, fonts, etc.)
   matcher: [
-    "/((?!api|_next|_vercel|.*\\..*)(.*))"],
+    "/((?!api|_next|_vercel|.*\\..*).*)",
+  ],
 };
