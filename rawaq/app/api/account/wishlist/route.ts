@@ -29,7 +29,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   const body = await req.json();
   const { productId } = body;
-  if (!productId) return apiError(ErrorCodes.BAD_REQUEST, "productId is required", 400);
+  if (!productId) return apiError(ErrorCodes.INVALID_INPUT, "productId is required", 400);
 
   // Check if exists
   const existing = await prisma.wishlistItem.findUnique({
@@ -53,7 +53,7 @@ export const DELETE = withErrorHandler(async (req: NextRequest) => {
   if (!session) return apiError(ErrorCodes.UNAUTHORIZED, "Unauthorized", 401);
 
   const productId = req.nextUrl.searchParams.get("productId");
-  if (!productId) return apiError(ErrorCodes.BAD_REQUEST, "productId is required", 400);
+  if (!productId) return apiError(ErrorCodes.INVALID_INPUT, "productId is required", 400);
 
   await prisma.wishlistItem.deleteMany({
     where: { userId: session.userId, productId }

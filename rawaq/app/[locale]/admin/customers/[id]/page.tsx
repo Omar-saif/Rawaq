@@ -67,7 +67,7 @@ export default function AdminCustomerDetailPage({ params }: { params: Promise<{ 
             <h2 className="text-3xl font-bold text-[var(--color-brand-navy)]">{customer.name}</h2>
             <p className="text-sm text-[var(--color-muted)] mt-1">{customer.email} • Joined {new Date(customer.createdAt).toLocaleDateString()}</p>
           </div>
-          <Button variant="outline" loading={sendingEmail} onClick={handleResetPassword}>
+          <Button variant="secondary" loading={sendingEmail} onClick={handleResetPassword}>
             Send Password Reset
           </Button>
         </div>

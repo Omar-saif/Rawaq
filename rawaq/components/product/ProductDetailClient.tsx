@@ -307,7 +307,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             {inStock ? t("product.addToCart") : t("product.outOfStock")}
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             size="lg"
             loading={addingToWishlist}
             onClick={handleAddToWishlist}

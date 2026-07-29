@@ -116,7 +116,7 @@ export default function WishlistPage() {
                     <div className="mt-auto flex items-center justify-between">
                       <PriceTag 
                         price={item.product.salePrice ?? item.product.price} 
-                        originalPrice={item.product.salePrice ? item.product.price : undefined} 
+                        salePrice={item.product.salePrice ? item.product.price : undefined} 
                         locale={locale} 
                       />
                     </div>

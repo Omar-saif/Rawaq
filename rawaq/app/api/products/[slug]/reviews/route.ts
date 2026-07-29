@@ -51,20 +51,19 @@ export const POST = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
   });
 
   if (existing) {
-    return apiError(ErrorCodes.BAD_REQUEST, "You have already reviewed this product", 400);
+    return apiError(ErrorCodes.INVALID_INPUT, "You have already reviewed this product", 400);
   }
 
   const body = await req.json();
-  const { rating, title, comment } = body;
+  const { rating, comment } = body;
   
   if (!rating || rating < 1 || rating > 5) {
-    return apiError(ErrorCodes.BAD_REQUEST, "Invalid rating", 400);
+    return apiError(ErrorCodes.INVALID_INPUT, "Invalid rating", 400);
   }
 
   const review = await prisma.review.create({
     data: {
       rating,
-      title,
       comment,
       productId: product.id,
       userId: session.userId,

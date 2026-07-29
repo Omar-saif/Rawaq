@@ -110,16 +110,16 @@ export function getOrderStatusEmail(order: any, status: string, locale: string =
     statusTextAr = "تم التوصيل";
   }
 
-  const title = isAr ? \`تم تحديث حالة الطلب: \${statusTextAr}\` : \`Order Status Updated: \${statusText}\`;
+  const title = isAr ? `تم تحديث حالة الطلب: ${statusTextAr}` : `Order Status Updated: ${statusText}`;
   
   return {
-    subject: \`Rawaq | \${title}\`,
-    html: \`
-      <div dir="\${isAr ? "rtl" : "ltr"}" style="font-family: sans-serif; color: #1a202c; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #0f172a;">\${title}</h1>
-        <p>\${isAr ? "تم تحديث حالة طلبك" : "The status of your order"} <strong>#\${order.id.slice(-8).toUpperCase()}</strong> \${isAr ? "إلى" : "has been updated to"} <strong>\${isAr ? statusTextAr : statusText}</strong>.</p>
-        <p>\${isAr ? "شكراً لتسوقك معنا!" : "Thank you for shopping with us!"}</p>
+    subject: `Rawaq | ${title}`,
+    html: `
+      <div dir="${isAr ? "rtl" : "ltr"}" style="font-family: sans-serif; color: #1a202c; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #0f172a;">${title}</h1>
+        <p>${isAr ? "تم تحديث حالة طلبك" : "The status of your order"} <strong>#${order.id.slice(-8).toUpperCase()}</strong> ${isAr ? "إلى" : "has been updated to"} <strong>${isAr ? statusTextAr : statusText}</strong>.</p>
+        <p>${isAr ? "شكراً لتسوقك معنا!" : "Thank you for shopping with us!"}</p>
       </div>
-    \`,
+    `,
   };
 }

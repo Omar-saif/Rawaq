@@ -89,7 +89,7 @@ export function ProductReviews({ slug }: ProductReviewsProps) {
             </div>
           )}
         </div>
-        <Button variant="outline" onClick={() => setFormOpen(!formOpen)}>
+        <Button variant="secondary" onClick={() => setFormOpen(!formOpen)}>
           {locale === "ar" ? "اكتب تقييمك" : "Write a Review"}
         </Button>
       </div>
