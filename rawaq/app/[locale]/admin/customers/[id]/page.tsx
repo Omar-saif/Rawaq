@@ -125,6 +125,7 @@ export default function AdminCustomerDetailPage({ params }: { params: Promise<{ 
                       <th className="px-6 py-3">Date</th>
                       <th className="px-6 py-3">Items</th>
                       <th className="px-6 py-3">Total</th>
+                      <th className="px-6 py-3">Channel</th>
                       <th className="px-6 py-3">Status</th>
                       <th className="px-6 py-3"></th>
                     </tr>
@@ -138,6 +139,11 @@ export default function AdminCustomerDetailPage({ params }: { params: Promise<{ 
                           <td className="px-6 py-4 text-[var(--color-muted)]">{new Date(o.createdAt).toLocaleDateString()}</td>
                           <td className="px-6 py-4 text-[var(--color-muted)]">{itemCount}</td>
                           <td className="px-6 py-4 font-medium"><PriceTag price={o.total} size="sm" locale="en" /></td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${o.channel === 'WEBSITE' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-pink-50 text-pink-600 border border-pink-100'}`}>
+                              {o.channel || 'WEBSITE'}
+                            </span>
+                          </td>
                           <td className="px-6 py-4">
                             <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
                               {o.status}

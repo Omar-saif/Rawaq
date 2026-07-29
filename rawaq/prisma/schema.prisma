@@ -34,6 +34,15 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum SalesChannel {
+  WEBSITE
+  INSTAGRAM
+  WHATSAPP
+  FACEBOOK
+  TIKTOK
+  OTHER
+}
+
 // ── User & Address ────────────────────────────────────────────────────────────
 
 model User {
@@ -191,6 +200,7 @@ model Order {
   guestEmail      String?
   guestPhone      String?
   status          OrderStatus @default(PENDING)
+  channel         SalesChannel @default(WEBSITE)
   subtotal        Decimal     @db.Decimal(10, 2)
   discountAmount  Decimal     @db.Decimal(10, 2) @default(0)
   total           Decimal     @db.Decimal(10, 2)

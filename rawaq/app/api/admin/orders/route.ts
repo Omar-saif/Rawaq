@@ -10,8 +10,12 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const { page, pageSize, skip } = parsePagination(searchParams);
   const status = searchParams.get("status") as OrderStatus | null;
+  const channel = searchParams.get("channel") as any;
 
-  const where: Prisma.OrderWhereInput = status ? { status } : {};
+  const where: Prisma.OrderWhereInput = {
+    ...(status ? { status } : {}),
+    ...(channel ? { channel } : {}),
+  };
 
   const [orders, total] = await Promise.all([
     prisma.order.findMany({

@@ -190,6 +190,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
         guestEmail: data.guest?.email,
         guestPhone: data.guest?.phone,
         status: "PENDING",
+        channel: "WEBSITE",
         subtotal,
         discountAmount,
         total,

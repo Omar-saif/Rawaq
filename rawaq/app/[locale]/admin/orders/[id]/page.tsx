@@ -135,7 +135,12 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
         <div className="flex items-start justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold text-[var(--color-brand-navy)]">Order #{order.id.slice(-8).toUpperCase()}</h2>
-            <p className="text-sm text-[var(--color-muted)] mt-1">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="text-sm text-[var(--color-muted)]">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${order.channel === 'WEBSITE' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-pink-50 text-pink-600 border border-pink-100'}`}>
+                {order.channel || 'WEBSITE'}
+              </span>
+            </div>
           </div>
           <span className={`px-4 py-1.5 rounded-full text-sm font-bold ${STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-700"}`}>
             {order.status}

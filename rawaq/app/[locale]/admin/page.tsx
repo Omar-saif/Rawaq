@@ -15,7 +15,7 @@ export default async function AdminDashboard() {
 
   if (!session || session.role !== "ADMIN") redirect(`/${locale}/login`);
 
-  const [totalOrders, totalProducts, totalRevenue, recentOrders, totalUsers, lowStockProducts] = await Promise.all([
+  const [totalOrders, totalProducts, totalRevenue, recentOrders, totalUsers, lowStockProducts, channelBreakdown] = await Promise.all([
     prisma.order.count(),
     prisma.product.count({ where: { isActive: true } }),
     prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: ["PAID", "SHIPPED", "DELIVERED"] } } }),
@@ -34,6 +34,12 @@ export default async function AdminDashboard() {
       orderBy: { inventoryCount: "asc" },
       select: { id: true, title: true, sku: true, inventoryCount: true, slug: true }
     }),
+    prisma.order.groupBy({
+      by: ["channel"],
+      _count: { id: true },
+      _sum: { total: true },
+      where: { status: { in: ["PAID", "SHIPPED", "DELIVERED"] } }
+    })
   ]);
 
   const revenue = parseFloat((totalRevenue._sum.total ?? 0).toString());
@@ -73,6 +79,28 @@ export default async function AdminDashboard() {
               <p className="text-sm text-white/80 mt-1">{stat.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Channel Breakdown */}
+        <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-border)] p-6 mb-8">
+          <h3 className="font-bold text-[var(--color-brand-navy)] mb-4">Revenue by Sales Channel</h3>
+          {channelBreakdown.length === 0 ? (
+            <p className="text-sm text-[var(--color-muted)]">No revenue data yet.</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {channelBreakdown.map((cb) => (
+                <div key={cb.channel} className="bg-[var(--color-gray-50)] border border-[var(--color-border)] rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider mb-2 ${cb.channel === 'WEBSITE' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-pink-50 text-pink-600 border border-pink-100'}`}>
+                    {cb.channel}
+                  </span>
+                  <span className="text-lg font-bold text-[var(--color-brand-navy)]">
+                    {parseFloat((cb._sum.total ?? 0).toString()).toFixed(0)} SAR
+                  </span>
+                  <span className="text-xs text-[var(--color-muted)] mt-1">{cb._count.id} orders</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Quick actions */}

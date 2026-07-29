@@ -17,7 +17,7 @@ export const GET = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
       orders: {
         orderBy: { createdAt: 'desc' },
         select: {
-          id: true, total: true, status: true, createdAt: true,
+          id: true, total: true, status: true, channel: true, createdAt: true,
           items: { select: { quantity: true } }
         }
       },

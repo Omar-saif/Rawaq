@@ -14,6 +14,7 @@ interface Order {
   _count: { items: number };
   trackingNumber?: string | null;
   trackingUrl?: string | null;
+  channel?: string;
 }
 
 const STATUSES = ["PENDING", "PAID", "PACKED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"];
@@ -43,6 +44,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [filterChannel, setFilterChannel] = useState("ALL");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -57,13 +59,14 @@ export default function AdminOrdersPage() {
     try {
       const params = new URLSearchParams({ page: page.toString(), pageSize: "20" });
       if (filterStatus !== "ALL") params.set("status", filterStatus);
+      if (filterChannel !== "ALL") params.set("channel", filterChannel);
       const res = await fetch(`/api/admin/orders?${params}`);
       const json = await res.json();
       setOrders(json.data ?? []);
       setTotalPages(json.meta?.totalPages ?? 1);
       setTotal(json.meta?.total ?? 0);
     } finally { setLoading(false); }
-  }, [page, filterStatus]);
+  }, [page, filterStatus, filterChannel]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
@@ -113,16 +116,34 @@ export default function AdminOrdersPage() {
             <h2 className="text-2xl font-bold text-[var(--color-brand-navy)]">Orders</h2>
             <p className="text-sm text-[var(--color-muted)] mt-1">{total} total orders</p>
           </div>
+          <Link href="/admin/orders/new">
+            <Button variant="primary">New Manual Order</Button>
+          </Link>
         </div>
 
-        {/* Status filter tabs */}
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {["ALL", ...STATUSES].map(s => (
-            <button key={s} onClick={() => { setFilterStatus(s); setPage(1); }}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors border ${filterStatus === s ? "bg-[var(--color-brand-navy)] text-white border-[var(--color-brand-navy)]" : "bg-white text-[var(--color-gray-600)] border-[var(--color-border)] hover:border-[var(--color-brand-navy)]/40"}`}>
-              {s}
-            </button>
-          ))}
+        {/* Filters */}
+        <div className="flex gap-4 mb-4 flex-wrap items-center">
+          <div className="flex gap-2 flex-wrap">
+            {["ALL", ...STATUSES].map(s => (
+              <button key={s} onClick={() => { setFilterStatus(s); setPage(1); }}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors border ${filterStatus === s ? "bg-[var(--color-brand-navy)] text-white border-[var(--color-brand-navy)]" : "bg-white text-[var(--color-gray-600)] border-[var(--color-border)] hover:border-[var(--color-brand-navy)]/40"}`}>
+                {s}
+              </button>
+            ))}
+          </div>
+          <select 
+            value={filterChannel} 
+            onChange={(e) => { setFilterChannel(e.target.value); setPage(1); }}
+            className="border border-[var(--color-border)] rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:border-[var(--color-brand-gold)]"
+          >
+            <option value="ALL">All Channels</option>
+            <option value="WEBSITE">Website</option>
+            <option value="INSTAGRAM">Instagram</option>
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="FACEBOOK">Facebook</option>
+            <option value="TIKTOK">TikTok</option>
+            <option value="OTHER">Other</option>
+          </select>
         </div>
 
         <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-border)] overflow-hidden">
@@ -135,7 +156,7 @@ export default function AdminOrdersPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--color-border)] bg-[var(--color-gray-50)]">
-                    {["Order ID", "Customer", "Items", "Total", "Status", "Date", "Update Status"].map(h => (
+                    {["Order ID", "Customer", "Items", "Total", "Channel", "Status", "Date", "Update Status"].map(h => (
                       <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide">{h}</th>
                     ))}
                   </tr>
@@ -154,6 +175,11 @@ export default function AdminOrdersPage() {
                         </td>
                         <td className="px-4 py-4 text-[var(--color-muted)]">{order._count.items}</td>
                         <td className="px-4 py-4 font-semibold">{parseFloat(order.total.toString()).toFixed(2)} SAR</td>
+                        <td className="px-4 py-4">
+                          <span className={`px-2 py-1 rounded text-[10px] font-bold tracking-wider ${order.channel === 'WEBSITE' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-pink-50 text-pink-600 border border-pink-100'}`}>
+                            {order.channel || 'WEBSITE'}
+                          </span>
+                        </td>
                         <td className="px-4 py-4">
                           <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-700"}`}>
                             {order.status}
