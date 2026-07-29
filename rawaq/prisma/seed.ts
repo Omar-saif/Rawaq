@@ -469,10 +469,8 @@ async function main() {
   console.log("   WELCOME50 — 50 SAR off, min cart 200 SAR");
 
   // ── Delivery Vendors ────────────────────────────────────────────────────────
-  const vendor1 = await prisma.deliveryVendor.upsert({
-    where: { name: "Aramex Standard" },
-    update: {},
-    create: {
+  const vendorsData = [
+    {
       name: "Aramex Standard",
       nameAr: "أرامكس العادي",
       price: 25,
@@ -480,12 +478,7 @@ async function main() {
       estimatedDaysAr: "٣-٥ أيام عمل",
       isActive: true,
     },
-  });
-
-  const vendor2 = await prisma.deliveryVendor.upsert({
-    where: { name: "SMSA Express" },
-    update: {},
-    create: {
+    {
       name: "SMSA Express",
       nameAr: "سمسا السريع",
       price: 45,
@@ -493,12 +486,7 @@ async function main() {
       estimatedDaysAr: "١-٢ أيام عمل",
       isActive: true,
     },
-  });
-
-  const vendor3 = await prisma.deliveryVendor.upsert({
-    where: { name: "Rawaq Local (Riyadh Only)" },
-    update: {},
-    create: {
+    {
       name: "Rawaq Local (Riyadh Only)",
       nameAr: "توصيل رواق (الرياض فقط)",
       price: 15,
@@ -506,9 +494,16 @@ async function main() {
       estimatedDaysAr: "توصيل في نفس اليوم",
       isActive: true,
     },
-  });
+  ];
 
-  console.log("✅ Delivery vendors created:", vendor1.name, vendor2.name, vendor3.name);
+  for (const v of vendorsData) {
+    const existing = await prisma.deliveryVendor.findFirst({ where: { name: v.name } });
+    if (!existing) {
+      await prisma.deliveryVendor.create({ data: v });
+    }
+  }
+
+  console.log("✅ Delivery vendors created");
 
   // ── Hero Slides ───────────────────────────────────────────────────────────
   const slidesData = [
