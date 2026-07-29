@@ -27,7 +27,9 @@ enum DiscountType {
 enum OrderStatus {
   PENDING
   PAID
+  PACKED
   SHIPPED
+  OUT_FOR_DELIVERY
   DELIVERED
   CANCELLED
 }
@@ -48,6 +50,8 @@ model User {
   orders    Order[]
   cart      Cart?
   auditLogs AuditLog[] @relation("AdminAuditLogs")
+  reviews   Review[]
+  wishlist  WishlistItem[]
 
   // Password reset tokens (hashed, single-use)
   resetTokenHash   String?
@@ -121,6 +125,8 @@ model Product {
   variants   ProductVariant[]
   orderItems OrderItem[]
   cartItems  CartItem[]
+  reviews    Review[]
+  wishlist   WishlistItem[]
 
   @@index([categoryId])
   @@index([slug])
@@ -161,6 +167,8 @@ model Coupon {
   usageLimit    Int          @default(1)
   timesUsed     Int          @default(0)
   isActive      Boolean      @default(true)
+  isFreeShipping Boolean     @default(false)
+  isFirstOrderOnly Boolean   @default(false)
 
   orders Order[]
 
@@ -191,6 +199,8 @@ model Order {
   deliveryVendorId String?
   deliveryVendor   DeliveryVendor? @relation(fields: [deliveryVendorId], references: [id])
   shippingAddress Json        // snapshot, not a live FK
+  trackingNumber  String?
+  trackingUrl     String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -335,5 +345,34 @@ model AuditLog {
   @@index([adminId])
   @@index([action])
   @@index([createdAt])
+}
+
+// -- Wishlist ------------------------------------------------------------------
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// -- Reviews -------------------------------------------------------------------
+model Review {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating           Int      // 1 to 5
+  comment          String?
+  verifiedPurchase Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([productId])
+  @@index([userId])
 }
 

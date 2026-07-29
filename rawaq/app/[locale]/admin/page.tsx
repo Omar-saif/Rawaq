@@ -15,7 +15,7 @@ export default async function AdminDashboard() {
 
   if (!session || session.role !== "ADMIN") redirect(`/${locale}/login`);
 
-  const [totalOrders, totalProducts, totalRevenue, recentOrders, totalUsers] = await Promise.all([
+  const [totalOrders, totalProducts, totalRevenue, recentOrders, totalUsers, lowStockProducts] = await Promise.all([
     prisma.order.count(),
     prisma.product.count({ where: { isActive: true } }),
     prisma.order.aggregate({ _sum: { total: true }, where: { status: { in: ["PAID", "SHIPPED", "DELIVERED"] } } }),
@@ -28,6 +28,12 @@ export default async function AdminDashboard() {
       },
     }),
     prisma.user.count({ where: { role: "CUSTOMER" } }),
+    prisma.product.findMany({
+      where: { inventoryCount: { lte: 5 } },
+      take: 5,
+      orderBy: { inventoryCount: "asc" },
+      select: { id: true, title: true, sku: true, inventoryCount: true, slug: true }
+    }),
   ]);
 
   const revenue = parseFloat((totalRevenue._sum.total ?? 0).toString());
@@ -138,6 +144,50 @@ export default async function AdminDashboard() {
               <p className="text-center py-8 text-[var(--color-muted)] text-sm">No orders yet.</p>
             )}
           </div>
+        </div>
+
+        {/* Low Stock Alerts */}
+        <div className="mt-8 bg-white rounded-[var(--radius-xl)] border border-[var(--color-border)] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-[var(--color-brand-navy)] flex items-center gap-2">
+              <span className="text-red-500">⚠️</span> Low Stock Alerts
+            </h3>
+            <Link href="/admin/products" className="text-xs text-[var(--color-brand-navy)] hover:underline">
+              Manage Products →
+            </Link>
+          </div>
+          {lowStockProducts.length === 0 ? (
+            <p className="text-sm text-[var(--color-muted)] text-center py-4">All products are well stocked.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--color-border)]">
+                    <th className="px-4 py-2 text-start text-xs font-semibold text-[var(--color-muted)] uppercase">Product</th>
+                    <th className="px-4 py-2 text-start text-xs font-semibold text-[var(--color-muted)] uppercase">SKU</th>
+                    <th className="px-4 py-2 text-start text-xs font-semibold text-[var(--color-muted)] uppercase">Stock</th>
+                    <th className="px-4 py-2 text-start text-xs font-semibold text-[var(--color-muted)] uppercase">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lowStockProducts.map(p => (
+                    <tr key={p.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-gray-50)]">
+                      <td className="px-4 py-3 font-medium">{p.title}</td>
+                      <td className="px-4 py-3 text-xs font-mono">{p.sku}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${p.inventoryCount === 0 ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"}`}>
+                          {p.inventoryCount}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link href={`/product/${p.slug}`} target="_blank" className="text-xs text-[var(--color-brand-navy)] hover:underline">View</Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </main>
     </div>

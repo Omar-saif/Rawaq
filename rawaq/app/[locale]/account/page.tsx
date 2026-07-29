@@ -80,6 +80,7 @@ export default async function AccountPage() {
               {[
                 { href: "/account", label: locale === "ar" ? "نظرة عامة" : "Overview", icon: "👤" },
                 { href: "/account/orders", label: locale === "ar" ? "طلباتي" : "My Orders", icon: "📦" },
+                { href: "/account/wishlist", label: locale === "ar" ? "قائمة الأمنيات" : "Wishlist", icon: "❤️" },
                 { href: "/account/addresses", label: locale === "ar" ? "عناويني" : "Addresses", icon: "📍" },
                 ...(user.role === "ADMIN" ? [{ href: "/admin", label: locale === "ar" ? "لوحة الإدارة" : "Admin Panel", icon: "⚙️" }] : []),
               ].map((item) => (

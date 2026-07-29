@@ -12,22 +12,28 @@ interface Order {
   guestEmail?: string;
   user?: { name: string; email: string };
   _count: { items: number };
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
 }
 
-const STATUSES = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"];
+const STATUSES = ["PENDING", "PAID", "PACKED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"];
 const STATUS_COLORS: Record<string, string> = {
-  PENDING:   "bg-amber-100 text-amber-800",
-  PAID:      "bg-blue-100 text-blue-800",
-  SHIPPED:   "bg-purple-100 text-purple-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-red-100 text-red-800",
+  PENDING:          "bg-amber-100 text-amber-800",
+  PAID:             "bg-blue-100 text-blue-800",
+  PACKED:           "bg-indigo-100 text-indigo-800",
+  SHIPPED:          "bg-purple-100 text-purple-800",
+  OUT_FOR_DELIVERY: "bg-fuchsia-100 text-fuchsia-800",
+  DELIVERED:        "bg-green-100 text-green-800",
+  CANCELLED:        "bg-red-100 text-red-800",
 };
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  PENDING:   ["PAID", "CANCELLED"],
-  PAID:      ["SHIPPED", "CANCELLED"],
-  SHIPPED:   ["DELIVERED"],
-  DELIVERED: [],
-  CANCELLED: [],
+  PENDING:          ["PAID", "CANCELLED"],
+  PAID:             ["PACKED", "SHIPPED", "CANCELLED"],
+  PACKED:           ["SHIPPED"],
+  SHIPPED:          ["OUT_FOR_DELIVERY", "DELIVERED"],
+  OUT_FOR_DELIVERY: ["DELIVERED"],
+  DELIVERED:        [],
+  CANCELLED:        [],
 };
 
 
@@ -41,6 +47,10 @@ export default function AdminOrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [updating, setUpdating] = useState<string | null>(null);
+  
+  const [trackingModalOpen, setTrackingModalOpen] = useState(false);
+  const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+  const [trackingForm, setTrackingForm] = useState({ trackingNumber: "", trackingUrl: "" });
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -66,6 +76,28 @@ export default function AdminOrdersPage() {
       });
       if (!res.ok) throw new Error((await res.json()).error?.message);
       addToast("success", `Order updated to ${newStatus}`);
+      fetchOrders();
+    } catch (e: any) { addToast("error", e.message ?? "Update failed"); }
+    finally { setUpdating(null); }
+  };
+
+  const openTrackingModal = (order: Order) => {
+    setTrackingOrder(order);
+    setTrackingForm({ trackingNumber: order.trackingNumber || "", trackingUrl: order.trackingUrl || "" });
+    setTrackingModalOpen(true);
+  };
+
+  const handleSaveTracking = async () => {
+    if (!trackingOrder) return;
+    setUpdating(trackingOrder.id);
+    try {
+      const res = await fetch(`/api/admin/orders/${trackingOrder.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(trackingForm),
+      });
+      if (!res.ok) throw new Error((await res.json()).error?.message);
+      addToast("success", "Tracking info updated");
+      setTrackingModalOpen(false);
       fetchOrders();
     } catch (e: any) { addToast("error", e.message ?? "Update failed"); }
     finally { setUpdating(null); }
@@ -144,6 +176,14 @@ export default function AdminOrdersPage() {
                           ) : (
                             <span className="text-xs text-[var(--color-gray-300)]">Final state</span>
                           )}
+                          <div className="mt-2">
+                            <button 
+                              onClick={() => openTrackingModal(order)}
+                              className="text-xs font-medium text-[var(--color-brand-gold)] hover:underline"
+                            >
+                              Edit Tracking
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -162,6 +202,30 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </main>
+
+      {/* Tracking Modal */}
+      <Modal open={trackingModalOpen} onClose={() => setTrackingModalOpen(false)} title="Update Tracking Info" size="sm">
+        <div className="space-y-4">
+          <Input 
+            id="tracking-number" 
+            label="Tracking Number" 
+            value={trackingForm.trackingNumber} 
+            onChange={e => setTrackingForm(f => ({ ...f, trackingNumber: e.target.value }))} 
+            placeholder="e.g. 1Z9999999999999999" 
+          />
+          <Input 
+            id="tracking-url" 
+            label="Tracking URL" 
+            value={trackingForm.trackingUrl} 
+            onChange={e => setTrackingForm(f => ({ ...f, trackingUrl: e.target.value }))} 
+            placeholder="https://tracker.provider.com/..." 
+          />
+        </div>
+        <div className="flex gap-3 pt-4 border-t border-[var(--color-border)] mt-4">
+          <Button variant="primary" fullWidth size="md" loading={updating === trackingOrder?.id} onClick={handleSaveTracking}>Save Tracking</Button>
+          <Button variant="secondary" fullWidth size="md" onClick={() => setTrackingModalOpen(false)}>Cancel</Button>
+        </div>
+      </Modal>
     </div>
   );
 }

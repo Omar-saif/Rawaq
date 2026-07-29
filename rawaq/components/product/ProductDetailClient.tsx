@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { useCart } from "@/components/layout/CartContext";
 import { useToast } from "@/components/ui/Modal";
 import { ProductLightbox } from "./ProductLightbox";
+import { ProductReviews } from "./ProductReviews";
 
 interface Variant {
   id: string;
@@ -57,6 +58,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const title = locale === "ar" && product.titleAr ? product.titleAr : product.title;
@@ -117,6 +119,35 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     setAdding(false);
     addToast("success", locale === "ar" ? "تمت إضافة المنتج للسلة" : "Added to cart!");
     openCart();
+  };
+
+  const handleAddToWishlist = async () => {
+    setAddingToWishlist(true);
+    try {
+      const res = await fetch("/api/account/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data?.message === "Already in wishlist") {
+          addToast("info", locale === "ar" ? "المنتج موجود في قائمة الأمنيات" : "Already in wishlist");
+        } else {
+          addToast("success", locale === "ar" ? "تمت الإضافة لقائمة الأمنيات" : "Added to wishlist");
+        }
+      } else {
+        if (res.status === 401) {
+          addToast("error", locale === "ar" ? "يجب تسجيل الدخول أولاً" : "Please login first");
+        } else {
+          addToast("error", locale === "ar" ? "فشلت الإضافة" : "Failed to add to wishlist");
+        }
+      }
+    } catch {
+      addToast("error", "Network error");
+    } finally {
+      setAddingToWishlist(false);
+    }
   };
 
   return (
@@ -268,12 +299,22 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             id={`add-to-cart-${product.slug}`}
             variant="primary"
             size="lg"
-            fullWidth
+            className="flex-1"
             loading={adding}
             disabled={!inStock}
             onClick={handleAddToCart}
           >
             {inStock ? t("product.addToCart") : t("product.outOfStock")}
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            loading={addingToWishlist}
+            onClick={handleAddToWishlist}
+            className="shrink-0"
+            aria-label="Add to wishlist"
+          >
+            ❤️
           </Button>
         </div>
 
@@ -294,6 +335,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           </h2>
           <p className="text-sm text-[var(--color-gray-600)] leading-relaxed">{description}</p>
         </div>
+      </div>
+
+      <div className="lg:col-span-2">
+        <ProductReviews slug={product.slug} />
       </div>
 
       {/* Lightbox Modal */}

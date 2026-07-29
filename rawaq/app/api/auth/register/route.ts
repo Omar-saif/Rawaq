@@ -9,6 +9,8 @@ import {
   withErrorHandler,
 } from "@/lib/utils/api";
 import { signSession, setSessionCookie } from "@/lib/utils/session";
+import { sendEmail, getWelcomeEmail } from "@/lib/email";
+import { checkRateLimit } from "@/lib/utils/rateLimit";
 
 const RegisterSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -22,6 +24,12 @@ const RegisterSchema = z.object({
 });
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
+  // Max 5 registrations per 15 minutes per IP
+  if (!checkRateLimit(`register_${ip}`, 5, 15 * 60 * 1000)) {
+    return apiError(ErrorCodes.RATE_LIMIT, "Too many registration attempts. Please wait 15 minutes.", 429);
+  }
+
   const body = await req.json();
   const data = RegisterSchema.parse(body);
 
@@ -60,6 +68,11 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     role: user.role,
   });
   await setSessionCookie(token);
+
+  // Send Welcome Email (fire and forget)
+  const locale = req.headers.get("x-invoke-path")?.startsWith("/ar") ? "ar" : "en";
+  const { subject, html } = getWelcomeEmail(user.name, locale);
+  sendEmail({ to: user.email, subject, html }).catch(console.error);
 
   return apiSuccess({ user }, undefined, 201);
 });

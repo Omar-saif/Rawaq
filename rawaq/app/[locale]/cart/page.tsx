@@ -83,10 +83,34 @@ function CouponInput() {
 export default function CartPage() {
   const locale = useLocale();
   const t = useTranslations();
-  const { items, subtotal, coupon, updateQty, removeItem, clearCart, itemCount } = useCart();
+  const { items, subtotal, coupon, updateQty, removeItem, clearCart, itemCount, loading } = useCart();
 
   const discountAmount = coupon?.discountAmount ?? 0;
   const total = coupon?.newTotal ?? subtotal;
+
+  if (loading) {
+    return (
+      <main className="flex-1 bg-[var(--color-gray-50)] py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-8" />
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              {[1, 2].map(i => (
+                <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 flex gap-5">
+                  <div className="w-24 h-28 bg-gray-200 rounded-lg shrink-0" />
+                  <div className="flex-1 py-2">
+                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-3" />
+                    <div className="h-4 bg-gray-200 rounded w-1/4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-6 h-64" />
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (items.length === 0) {
     return (

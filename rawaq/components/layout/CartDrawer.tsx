@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 export function CartDrawer() {
   const t = useTranslations();
   const locale = useLocale();
-  const { items, coupon, subtotal, itemCount, removeItem, updateQty, closeCart, isOpen } = useCart();
+  const { items, coupon, subtotal, itemCount, removeItem, updateQty, closeCart, isOpen, loading } = useCart();
   const drawerRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape
@@ -78,7 +78,20 @@ export function CartDrawer() {
 
         {/* Cart items */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {items.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col gap-4 animate-pulse">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex gap-4">
+                  <div className="w-20 h-24 bg-gray-200 rounded-lg shrink-0" />
+                  <div className="flex-1 py-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2 mb-4" />
+                    <div className="h-4 bg-gray-200 rounded w-1/4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
               <div className="w-20 h-20 bg-[var(--color-gray-100)] rounded-full flex items-center justify-center mb-4">
                 <svg className="w-10 h-10 text-[var(--color-gray-300)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -160,7 +173,7 @@ export function CartDrawer() {
         </div>
 
         {/* Footer with totals */}
-        {items.length > 0 && (
+        {!loading && items.length > 0 && (
           <div className="border-t border-[var(--color-border)] px-6 py-4 space-y-3">
             {coupon && (
               <div className="flex justify-between text-sm">

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { apiSuccess, apiError, ErrorCodes, withErrorHandler, ApiException } from "@/lib/utils/api";
 import { getSession } from "@/lib/utils/session";
+import { sendEmail, getOrderConfirmationEmail } from "@/lib/email";
+import { checkRateLimit } from "@/lib/utils/rateLimit";
 
 const AddressSchema = z.object({
   street: z.string().min(1),
@@ -36,6 +38,12 @@ const CheckoutSchema = z.object({
 
 // POST /api/checkout
 export const POST = withErrorHandler(async (req: NextRequest) => {
+  const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
+  // Max 5 checkouts per 15 minutes per IP
+  if (!checkRateLimit(`checkout_${ip}`, 5, 15 * 60 * 1000)) {
+    return apiError(ErrorCodes.RATE_LIMIT, "Too many checkout attempts. Please try again later.", 429);
+  }
+
   const body = await req.json();
   const data = CheckoutSchema.parse(body);
   const session = await getSession();
@@ -210,6 +218,16 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   }
 
   await processPayment(order.id);
+
+  // Send Order Confirmation Email
+  const emailTo = session?.email || data.guest?.email;
+  if (emailTo) {
+    const locale = req.headers.get("x-invoke-path")?.startsWith("/ar") ? "ar" : "en"; // Simple locale guess from header or fallback
+    const { subject, html } = getOrderConfirmationEmail(order, locale);
+    
+    // Fire and forget (don't block checkout response if email fails)
+    sendEmail({ to: emailTo, subject, html }).catch(console.error);
+  }
 
   return apiSuccess({ orderId: order.id, total: order.total }, undefined, 201);
 });

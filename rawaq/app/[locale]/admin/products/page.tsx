@@ -90,6 +90,8 @@ export default function AdminProductsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
@@ -168,6 +170,50 @@ export default function AdminProductsPage() {
     setProducts(prev => prev.map(pr => pr.id === p.id ? { ...pr, isActive: !pr.isActive } : pr));
   };
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(new Set(products.map(p => p.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const handleBulkAction = async (action: "activate" | "deactivate" | "delete") => {
+    if (selectedIds.size === 0) return;
+    const confirmMessage = `Are you sure you want to ${action} ${selectedIds.size} products?`;
+    if (!window.confirm(confirmMessage)) return;
+
+    setBulkActionLoading(true);
+    try {
+      const promises = Array.from(selectedIds).map(id => {
+        if (action === "delete") {
+          return fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+        } else {
+          return fetch(`/api/admin/products/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ isActive: action === "activate" })
+          });
+        }
+      });
+      await Promise.all(promises);
+      addToast("success", `Bulk ${action} successful`);
+      setSelectedIds(new Set());
+      fetchProducts();
+    } catch {
+      addToast("error", `Bulk ${action} failed`);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-gray-50)] flex">
       <AdminSidebar />
@@ -182,11 +228,19 @@ export default function AdminProductsPage() {
           <Button variant="primary" onClick={openCreate}>+ Add Product</Button>
         </div>
 
-        {/* Search */}
-        <div className="mb-4 flex gap-3">
-          <div className="flex-1 max-w-sm">
+        {/* Search & Bulk Actions */}
+        <div className="mb-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex-1 max-w-sm w-full">
             <Input id="product-search" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder="Search products..." />
           </div>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-[var(--color-border)] shadow-sm">
+              <span className="text-sm font-semibold text-[var(--color-brand-navy)] mr-2">{selectedIds.size} selected</span>
+              <Button variant="secondary" size="sm" onClick={() => handleBulkAction("activate")} disabled={bulkActionLoading}>Activate</Button>
+              <Button variant="secondary" size="sm" onClick={() => handleBulkAction("deactivate")} disabled={bulkActionLoading}>Deactivate</Button>
+              <Button variant="danger" size="sm" onClick={() => handleBulkAction("delete")} disabled={bulkActionLoading}>Delete</Button>
+            </div>
+          )}
         </div>
 
         {/* Table */}
@@ -204,6 +258,14 @@ export default function AdminProductsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--color-border)] bg-[var(--color-gray-50)]">
+                    <th className="px-4 py-3 text-start">
+                      <input 
+                        type="checkbox" 
+                        className="accent-[var(--color-brand-navy)] rounded"
+                        checked={products.length > 0 && selectedIds.size === products.length}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
                     {["Image", "Product", "SKU", "Category", "Price", "Stock", "Status", "Actions"].map(h => (
                       <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide">{h}</th>
                     ))}
@@ -211,7 +273,15 @@ export default function AdminProductsPage() {
                 </thead>
                 <tbody>
                   {products.map(p => (
-                    <tr key={p.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-gray-50)] transition-colors">
+                    <tr key={p.id} className={`border-b border-[var(--color-border)] hover:bg-[var(--color-gray-50)] transition-colors ${selectedIds.has(p.id) ? "bg-blue-50/50" : ""}`}>
+                      <td className="px-4 py-3">
+                        <input 
+                          type="checkbox" 
+                          className="accent-[var(--color-brand-navy)] rounded"
+                          checked={selectedIds.has(p.id)}
+                          onChange={() => handleSelectOne(p.id)}
+                        />
+                      </td>
                       <td className="px-4 py-3">
                         <div className="w-12 h-14 rounded-lg overflow-hidden bg-[var(--color-gray-100)] relative">
                           {p.images[0] && <Image src={p.images[0]} alt={p.title} fill className="object-cover" sizes="48px" unoptimized />}

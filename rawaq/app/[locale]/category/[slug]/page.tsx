@@ -91,7 +91,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Sidebar (Filters + Promos) */}
             <aside className="w-full lg:w-64 shrink-0 space-y-6">
-              <FilterSidebar />
+              <FilterSidebar attributeSchema={category.attributeSchema as any} />
               <SidePromoBanner pageType="category" />
             </aside>
 

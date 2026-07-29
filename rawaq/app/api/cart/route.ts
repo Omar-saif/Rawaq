@@ -18,7 +18,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     include: {
       items: {
         include: {
-          product: { select: { id: true, title: true, titleAr: true, slug: true, price: true, salePrice: true, images: true, inventoryCount: true } },
+          product: { select: { id: true, title: true, titleAr: true, slug: true, price: true, salePrice: true, images: true, inventoryCount: true, sku: true } },
           variant: true,
         },
       },

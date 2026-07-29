@@ -7,6 +7,7 @@ import { Link } from "@/lib/i18n/navigation";
 import { PriceTag, Card, Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/components/layout/CartContext";
+import { useToast } from "@/components/ui/Modal";
 
 export interface ProductCardData {
   id: string;
@@ -32,6 +33,39 @@ export function ProductCard({ product }: ProductCardProps) {
   const price = parseFloat(product.price.toString());
   const salePrice = product.salePrice ? parseFloat(product.salePrice.toString()) : null;
   const isOutOfStock = product.inventoryCount === 0 && (!product.variants || product.variants.every((v) => v.stockCount === 0));
+  const { addToast } = useToast();
+  const [addingToWishlist, setAddingToWishlist] = React.useState(false);
+
+  const handleAddToWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setAddingToWishlist(true);
+    try {
+      const res = await fetch("/api/account/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data?.message === "Already in wishlist") {
+          addToast("info", locale === "ar" ? "المنتج موجود في قائمة الأمنيات" : "Already in wishlist");
+        } else {
+          addToast("success", locale === "ar" ? "تمت الإضافة لقائمة الأمنيات" : "Added to wishlist");
+        }
+      } else {
+        if (res.status === 401) {
+          addToast("error", locale === "ar" ? "يجب تسجيل الدخول أولاً" : "Please login first");
+        } else {
+          addToast("error", locale === "ar" ? "فشلت الإضافة" : "Failed to add to wishlist");
+        }
+      }
+    } catch {
+      addToast("error", "Network error");
+    } finally {
+      setAddingToWishlist(false);
+    }
+  };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,10 +106,22 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
 
           {/* Badges */}
-          <div className="absolute top-2 start-2 flex flex-col gap-1">
+          <div className="absolute top-2 start-2 flex flex-col gap-1 z-10">
             {salePrice && salePrice < price && <Badge variant="error">Sale</Badge>}
             {isOutOfStock && <Badge variant="gray">{locale === "ar" ? "نفد" : "Sold Out"}</Badge>}
           </div>
+
+          {/* Wishlist Button */}
+          <button
+            onClick={handleAddToWishlist}
+            disabled={addingToWishlist}
+            className="absolute top-2 end-2 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-sm text-[var(--color-gray-400)] hover:text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-white disabled:opacity-50"
+            aria-label="Add to wishlist"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
 
           {/* Quick add overlay */}
           <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">

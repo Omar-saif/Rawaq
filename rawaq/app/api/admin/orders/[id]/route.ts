@@ -5,18 +5,23 @@ import { apiSuccess, apiError, ErrorCodes, withErrorHandler } from "@/lib/utils/
 import { requireAdmin } from "@/lib/utils/session";
 import { OrderStatus } from "@prisma/client";
 import { logAdminAction } from "@/lib/utils/audit";
+import { sendEmail, getOrderStatusEmail } from "@/lib/email";
 
 // Valid status transitions — prevents illegal state changes
 const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  PENDING:   ["PAID", "CANCELLED"],
-  PAID:      ["SHIPPED", "CANCELLED"],
-  SHIPPED:   ["DELIVERED"],
-  DELIVERED: [],
-  CANCELLED: [],
+  PENDING:          ["PAID", "CANCELLED"],
+  PAID:             ["PACKED", "SHIPPED", "CANCELLED"],
+  PACKED:           ["SHIPPED"],
+  SHIPPED:          ["OUT_FOR_DELIVERY", "DELIVERED"],
+  OUT_FOR_DELIVERY: ["DELIVERED"],
+  DELIVERED:        [],
+  CANCELLED:        [],
 };
 
-const UpdateStatusSchema = z.object({
-  status: z.enum(["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"]),
+const UpdateOrderSchema = z.object({
+  status: z.enum(["PENDING", "PAID", "PACKED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"]).optional(),
+  trackingNumber: z.string().optional(),
+  trackingUrl: z.string().optional(),
 });
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -53,25 +58,32 @@ export const PATCH = withErrorHandler(async (req: NextRequest, ctx: unknown) => 
   const session = await requireAdmin();
 
   const body = await req.json();
-  const { status: newStatus } = UpdateStatusSchema.parse(body);
+  const { status: newStatus, trackingNumber, trackingUrl } = UpdateOrderSchema.parse(body);
 
-  const order = await prisma.order.findUnique({ where: { id } });
+  const order = await prisma.order.findUnique({ where: { id }, include: { user: true } });
   if (!order) return apiError(ErrorCodes.NOT_FOUND, "Order not found", 404);
 
-  const allowed = VALID_TRANSITIONS[order.status];
-  if (!allowed.includes(newStatus)) {
-    return apiError(
-      ErrorCodes.INVALID_STATUS_TRANSITION,
-      `Cannot transition from ${order.status} to ${newStatus}`,
-      400
-    );
+  if (newStatus && newStatus !== order.status) {
+    const allowed = VALID_TRANSITIONS[order.status];
+    if (!allowed.includes(newStatus)) {
+      return apiError(
+        ErrorCodes.INVALID_STATUS_TRANSITION,
+        `Cannot transition from ${order.status} to ${newStatus}`,
+        400
+      );
+    }
   }
 
   const updated = await prisma.$transaction(async (tx) => {
-    const updatedOrder = await tx.order.update({ where: { id }, data: { status: newStatus } });
+    const dataToUpdate: any = {};
+    if (newStatus) dataToUpdate.status = newStatus;
+    if (trackingNumber !== undefined) dataToUpdate.trackingNumber = trackingNumber;
+    if (trackingUrl !== undefined) dataToUpdate.trackingUrl = trackingUrl;
+
+    const updatedOrder = await tx.order.update({ where: { id }, data: dataToUpdate });
 
     // Restore stock if cancelled
-    if (newStatus === "CANCELLED") {
+    if (newStatus === "CANCELLED" && order.status !== "CANCELLED") {
       const items = await tx.orderItem.findMany({ where: { orderId: id } });
       for (const item of items) {
         if (item.variantId) {
@@ -98,6 +110,15 @@ export const PATCH = withErrorHandler(async (req: NextRequest, ctx: unknown) => 
     resourceId: id,
     details: { oldStatus: order.status, newStatus },
   });
+
+  // Send status update email if applicable
+  if (newStatus && newStatus !== order.status && (newStatus === "SHIPPED" || newStatus === "DELIVERED" || newStatus === "OUT_FOR_DELIVERY")) {
+    const emailTo = order.user?.email || order.guestEmail;
+    if (emailTo) {
+      const { subject, html } = getOrderStatusEmail(updated, newStatus, "en");
+      sendEmail({ to: emailTo, subject, html }).catch(console.error);
+    }
+  }
 
   return apiSuccess(updated);
 });

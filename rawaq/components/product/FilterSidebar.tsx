@@ -2,18 +2,20 @@
 
 import React, { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 interface FilterSidebarProps {
   categories?: any[];
   showCategoryFilter?: boolean;
+  attributeSchema?: any[];
 }
 
-export function FilterSidebar({ categories = [], showCategoryFilter = false }: FilterSidebarProps) {
+export function FilterSidebar({ categories = [], showCategoryFilter = false, attributeSchema = [] }: FilterSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const t = useTranslations();
+  const locale = useLocale();
 
   // Local state for ranges, though we apply them immediately on change for simplicity
   // or on a "Apply" button. We'll do on change.
@@ -21,6 +23,8 @@ export function FilterSidebar({ categories = [], showCategoryFilter = false }: F
   const currentCategory = searchParams.get("categorySlug") || "";
   const currentMin = searchParams.get("minPrice") || "";
   const currentMax = searchParams.get("maxPrice") || "";
+  const currentAttribute = searchParams.get("attribute") || ""; // e.g. "size:52"
+
   
   const handleUpdate = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -91,18 +95,51 @@ export function FilterSidebar({ categories = [], showCategoryFilter = false }: F
         </div>
       </div>
       
-      {/* Placeholder for attribute filters (Size, Color) which would ideally be dynamic based on category */}
-      <div>
-        <h4 className="font-semibold text-[var(--color-gray-800)] mb-3 text-sm">Attributes</h4>
-        <p className="text-xs text-[var(--color-muted)]">Select options to refine.</p>
-        <div className="mt-2 space-y-2">
-           {/* Mock static filters for now until fully dynamic attributes are implemented */}
-           <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="accent-[var(--color-brand-navy)] rounded" />
-              <span className="text-sm text-[var(--color-gray-600)]">In Stock Only</span>
-            </label>
+      {/* Dynamic attribute filters */}
+      {attributeSchema && attributeSchema.length > 0 && (
+        <div>
+          <h4 className="font-semibold text-[var(--color-gray-800)] mb-3 text-sm">
+            {locale === "ar" ? "المواصفات" : "Attributes"}
+          </h4>
+          <div className="space-y-6">
+            {attributeSchema.map((attr: any) => {
+              if (attr.type === "select" || attr.type === "multiselect") {
+                return (
+                  <div key={attr.key}>
+                    <p className="text-xs font-semibold text-[var(--color-muted)] mb-2 uppercase">{attr.label}</p>
+                    <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                      {attr.options?.map((opt: string) => {
+                        const val = `${attr.key}:${opt}`;
+                        const isChecked = currentAttribute === val;
+                        return (
+                          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                            <input 
+                              type="radio" 
+                              name="attribute"
+                              checked={isChecked}
+                              onChange={() => handleUpdate("attribute", isChecked ? "" : val)}
+                              onClick={(e) => {
+                                // Allow deselecting radio
+                                if (isChecked) {
+                                  e.preventDefault();
+                                  handleUpdate("attribute", "");
+                                }
+                              }}
+                              className="accent-[var(--color-brand-navy)] rounded-full"
+                            />
+                            <span className="text-sm text-[var(--color-gray-600)] hover:text-[var(--color-brand-navy)]">{opt}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { apiSuccess, apiError, ErrorCodes, withErrorHandler } from "@/lib/utils/api";
+import { sendEmail, getPasswordResetEmail } from "@/lib/email";
 
 const ForgotSchema = z.object({
   email: z.string().email(),
@@ -38,10 +39,13 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     data: { resetTokenHash: tokenHash, resetTokenExpiry: expiry },
   });
 
-  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/en/reset-password?token=${rawToken}`;
+  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/en/reset-password?token=${rawToken}`; // We can localize later based on request
 
-  // TODO (Phase 12): Replace this console.log with a real email via Resend/SMTP
-  console.log(`[Password Reset] User: ${email} | Reset URL: ${resetUrl}`);
+  // Send the real email
+  const { subject, html } = getPasswordResetEmail(resetUrl, "en"); // Fallback to EN, can parse header for locale
+  await sendEmail({ to: email, subject, html });
+
+  console.log(`[Password Reset] Email sent to: ${email}`);
 
   return apiSuccess({ message: "If this email exists, a reset link has been sent." });
 });

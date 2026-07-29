@@ -14,13 +14,15 @@ export const metadata: Metadata = { title: "Order Details | Rawaq" };
 
 
 const statusColors: Record<string, string> = {
-  PENDING:   "bg-amber-100 text-amber-800",
-  PAID:      "bg-blue-100 text-blue-800",
-  SHIPPED:   "bg-purple-100 text-purple-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-red-100 text-red-800",
+  PENDING:          "bg-amber-100 text-amber-800",
+  PAID:             "bg-blue-100 text-blue-800",
+  PACKED:           "bg-indigo-100 text-indigo-800",
+  SHIPPED:          "bg-purple-100 text-purple-800",
+  OUT_FOR_DELIVERY: "bg-fuchsia-100 text-fuchsia-800",
+  DELIVERED:        "bg-green-100 text-green-800",
+  CANCELLED:        "bg-red-100 text-red-800",
 };
-const statusSteps = ["PENDING", "PAID", "SHIPPED", "DELIVERED"];
+const statusSteps = ["PENDING", "PAID", "PACKED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"];
 
 type PageProps = { params: Promise<{ locale: string; id: string }> };
 
@@ -61,10 +63,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const addr = (order.shippingAddress ?? {}) as ShippingAddr;
 
   const labelMap: Record<string, Record<string, string>> = {
-    PENDING:   { en: "Order Placed",      ar: "تم الطلب" },
-    PAID:      { en: "Payment Confirmed", ar: "تأكيد الدفع" },
-    SHIPPED:   { en: "Shipped",           ar: "تم الشحن" },
-    DELIVERED: { en: "Delivered",         ar: "تم التوصيل" },
+    PENDING:          { en: "Order Placed",      ar: "تم الطلب" },
+    PAID:             { en: "Payment Confirmed", ar: "تأكيد الدفع" },
+    PACKED:           { en: "Packed",            ar: "تم التجهيز" },
+    SHIPPED:          { en: "Shipped",           ar: "تم الشحن" },
+    OUT_FOR_DELIVERY: { en: "Out for Delivery",  ar: "في الطريق للتوصيل" },
+    DELIVERED:        { en: "Delivered",         ar: "تم التوصيل" },
   };
 
   return (
@@ -192,6 +196,33 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   <p className="text-sm text-[var(--color-gray-600)] mt-1">
                     {locale === "ar" && order.deliveryVendor.estimatedDaysAr ? order.deliveryVendor.estimatedDaysAr : order.deliveryVendor.estimatedDays}
                   </p>
+                </div>
+              )}
+              
+              {/* Tracking Information */}
+              {(order.trackingNumber || order.trackingUrl) && (
+                <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--color-border)] p-6">
+                  <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--color-muted)] mb-3">
+                    {locale === "ar" ? "معلومات التتبع" : "Tracking Information"}
+                  </h2>
+                  {order.trackingNumber && (
+                    <div className="mb-2">
+                      <p className="text-xs text-[var(--color-muted)] uppercase">{locale === "ar" ? "رقم التتبع" : "Tracking Number"}</p>
+                      <p className="font-mono text-sm text-[var(--color-foreground)]">{order.trackingNumber}</p>
+                    </div>
+                  )}
+                  {order.trackingUrl && (
+                    <div className="mt-4">
+                      <a 
+                        href={order.trackingUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="inline-block px-4 py-2 bg-[var(--color-brand-navy)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-brand-navy)]/90 transition-colors"
+                      >
+                        {locale === "ar" ? "تتبع الشحنة عبر الإنترنت" : "Track Shipment Online"} ↗
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
