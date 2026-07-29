@@ -43,8 +43,26 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     prisma.user.count({ where }),
   ]);
 
+  const userIds = users.map(u => u.id);
+  const orderTotals = await prisma.order.groupBy({
+    by: ['userId'],
+    where: { 
+      userId: { in: userIds },
+      status: { not: "CANCELLED" }
+    },
+    _sum: {
+      total: true
+    }
+  });
+
+  const totalsMap = new Map(orderTotals.map(t => [t.userId, t._sum.total ? parseFloat(t._sum.total.toString()) : 0]));
+
   return apiSuccess({
-    users: users.map(u => ({ ...u, orderCount: u._count.orders })),
+    users: users.map(u => ({ 
+      ...u, 
+      orderCount: u._count.orders,
+      totalSpent: totalsMap.get(u.id) || 0
+    })),
     total,
     page,
     pageSize,
