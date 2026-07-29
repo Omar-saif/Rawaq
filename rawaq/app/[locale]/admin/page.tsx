@@ -132,7 +132,7 @@ export default async function AdminDashboard() {
                       {new Date(order.createdAt).toLocaleDateString("en-SA")}
                     </td>
                     <td className="px-6 py-4">
-                      <Link href={`/admin/orders/${order.id}` as Parameters<typeof Link>[0]["href"]} className="text-xs text-[var(--color-brand-navy)] hover:underline font-medium">
+                      <Link href="/admin/orders" className="text-xs text-[var(--color-brand-navy)] hover:underline font-medium">
                         Manage
                       </Link>
                     </td>
