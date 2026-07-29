@@ -7,6 +7,7 @@ import { ProductCard, ProductCardData } from "@/components/ui/ProductCard";
 import { SortSelect } from "@/components/product/SortSelect";
 import { FilterSidebar } from "@/components/product/FilterSidebar";
 import { SidePromoBanner } from "@/components/ui/SidePromoBanner";
+import { getCategoryBySlug, getProducts, getCategories } from "@/lib/data/server";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -14,78 +15,14 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }
 
-interface CategoryNode {
-  id: string;
-  name: string;
-  nameAr: string;
-  slug: string;
-  children?: CategoryNode[];
-}
-
-async function getCategory(slug: string): Promise<CategoryNode | null> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    const cats: CategoryNode[] = json.data ?? [];
-    // Find in top-level or children
-    for (const cat of cats) {
-      if (cat.slug === slug) return cat;
-      if (cat.children) {
-        const sub = cat.children.find((c) => c.slug === slug);
-        if (sub) return sub;
-      }
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-async function getProducts(slug: string, searchParams: Record<string, string | undefined>) {
-  const params = new URLSearchParams();
-  params.set("categorySlug", slug);
-  if (searchParams.sort) params.set("sort", searchParams.sort);
-  if (searchParams.minPrice) params.set("minPrice", searchParams.minPrice);
-  if (searchParams.maxPrice) params.set("maxPrice", searchParams.maxPrice);
-  if (searchParams.attribute) params.set("attribute", searchParams.attribute);
-  if (searchParams.page) params.set("page", searchParams.page);
-  params.set("pageSize", "24");
-
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/products?${params}`, {
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return { products: [], total: 0, totalPages: 1 };
-    const json = await res.json();
-    return {
-      products: (json.data ?? []) as ProductCardData[],
-      total: json.meta?.total ?? 0,
-      totalPages: json.meta?.totalPages ?? 1,
-    };
-  } catch {
-    return { products: [], total: 0, totalPages: 1 };
-  }
-}
-
-async function getAllCategories() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, { next: { revalidate: 3600 } });
-    const json = await res.json();
-    return json.data ?? [];
-  } catch { return []; }
-}
-
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, locale } = await params;
-  const category = await getCategory(slug);
+  const category = await getCategoryBySlug(slug);
   
   if (!category) return { title: "Category Not Found" };
   
-  const title = locale === "ar" && category.nameAr ? category.nameAr : category.name;
+  const title = locale === "ar" && (category as any).nameAr ? (category as any).nameAr : category.name;
   return {
     title: `${title} | Rawaq`,
     description: `Shop the latest ${title} products at Rawaq.`,
@@ -97,15 +34,25 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const resolvedSearchParams = await searchParams;
   const locale = await getLocale();
 
+  const sort = (resolvedSearchParams.sort ?? "newest") as "newest" | "price_asc" | "price_desc";
+  const page = parseInt(resolvedSearchParams.page ?? "1");
+
   const [category, { products, total, totalPages }, allCategories] = await Promise.all([
-    getCategory(slug),
-    getProducts(slug, resolvedSearchParams),
-    getAllCategories(),
+    getCategoryBySlug(slug),
+    getProducts({
+      categorySlug: slug,
+      sort,
+      minPrice: resolvedSearchParams.minPrice ? parseFloat(resolvedSearchParams.minPrice) : undefined,
+      maxPrice: resolvedSearchParams.maxPrice ? parseFloat(resolvedSearchParams.maxPrice) : undefined,
+      attribute: resolvedSearchParams.attribute,
+      page,
+      pageSize: 24,
+    }),
+    getCategories(),
   ]);
 
   if (!category) notFound();
 
-  const page = parseInt(resolvedSearchParams.page ?? "1");
   const currentSort = resolvedSearchParams.sort ?? "newest";
 
   return (

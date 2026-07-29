@@ -3,6 +3,7 @@ import { getLocale } from "next-intl/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Link } from "@/lib/i18n/navigation";
+import { getCategories } from "@/lib/data/server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,12 +11,6 @@ export const metadata: Metadata = {
   description: "Learn about Rawaq — premium Islamic fashion and Arabic perfumes rooted in tradition.",
 };
 
-async function getCategories() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, { next: { revalidate: 3600 } });
-    return (await res.json()).data ?? [];
-  } catch { return []; }
-}
 
 export default async function AboutPage() {
   const [locale, categories] = await Promise.all([getLocale(), getCategories()]);

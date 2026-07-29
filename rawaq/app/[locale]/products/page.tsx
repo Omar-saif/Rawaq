@@ -5,45 +5,12 @@ import { Footer } from "@/components/layout/Footer";
 import { ProductCard, ProductCardData } from "@/components/ui/ProductCard";
 import { SortSelect } from "@/components/product/SortSelect";
 import { FilterSidebar } from "@/components/product/FilterSidebar";
+import { getProducts, getCategories } from "@/lib/data/server";
 import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ [key: string]: string | undefined }>;
-}
-
-async function getProducts(searchParams: Record<string, string | undefined>) {
-  const params = new URLSearchParams();
-  if (searchParams.categorySlug) params.set("categorySlug", searchParams.categorySlug);
-  if (searchParams.sort) params.set("sort", searchParams.sort);
-  if (searchParams.minPrice) params.set("minPrice", searchParams.minPrice);
-  if (searchParams.maxPrice) params.set("maxPrice", searchParams.maxPrice);
-  if (searchParams.attribute) params.set("attribute", searchParams.attribute);
-  if (searchParams.page) params.set("page", searchParams.page);
-  params.set("pageSize", "24");
-
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/products?${params}`, {
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return { products: [], total: 0, totalPages: 1 };
-    const json = await res.json();
-    return {
-      products: (json.data ?? []) as ProductCardData[],
-      total: json.meta?.total ?? 0,
-      totalPages: json.meta?.totalPages ?? 1,
-    };
-  } catch {
-    return { products: [], total: 0, totalPages: 1 };
-  }
-}
-
-async function getAllCategories() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, { next: { revalidate: 3600 } });
-    const json = await res.json();
-    return json.data ?? [];
-  } catch { return []; }
 }
 
 export const metadata: Metadata = {
@@ -55,12 +22,22 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
   const locale = await getLocale();
 
+  const sort = (resolvedSearchParams.sort ?? "newest") as "newest" | "price_asc" | "price_desc";
+  const page = parseInt(resolvedSearchParams.page ?? "1");
+
   const [{ products, total, totalPages }, allCategories] = await Promise.all([
-    getProducts(resolvedSearchParams),
-    getAllCategories(),
+    getProducts({
+      categorySlug: resolvedSearchParams.categorySlug,
+      sort,
+      minPrice: resolvedSearchParams.minPrice ? parseFloat(resolvedSearchParams.minPrice) : undefined,
+      maxPrice: resolvedSearchParams.maxPrice ? parseFloat(resolvedSearchParams.maxPrice) : undefined,
+      attribute: resolvedSearchParams.attribute,
+      page,
+      pageSize: 24,
+    }),
+    getCategories(),
   ]);
 
-  const page = parseInt(resolvedSearchParams.page ?? "1");
   const currentSort = resolvedSearchParams.sort ?? "newest";
 
   return (

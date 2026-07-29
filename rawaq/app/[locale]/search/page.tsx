@@ -3,16 +3,11 @@ import { getLocale } from "next-intl/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import SearchClient from "./SearchClient";
+import { getCategories } from "@/lib/data/server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Search | Rawaq", description: "Search Islamic fashion and Arabic perfumes at Rawaq" };
 
-async function getCategories() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, { next: { revalidate: 3600 } });
-    return (await res.json()).data ?? [];
-  } catch { return []; }
-}
 
 export default async function SearchPage() {
   const [locale, categories] = await Promise.all([getLocale(), getCategories()]);

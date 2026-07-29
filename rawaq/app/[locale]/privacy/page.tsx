@@ -2,6 +2,7 @@ import React from "react";
 import { getLocale } from "next-intl/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { getCategories } from "@/lib/data/server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,12 +10,6 @@ export const metadata: Metadata = {
   description: "Rawaq privacy policy — how we collect, use, and protect your data.",
 };
 
-async function getCategories() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, { next: { revalidate: 3600 } });
-    return (await res.json()).data ?? [];
-  } catch { return []; }
-}
 
 export default async function PrivacyPage() {
   const [locale, categories] = await Promise.all([getLocale(), getCategories()]);

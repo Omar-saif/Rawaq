@@ -4,48 +4,18 @@ import { getLocale } from "next-intl/server";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductDetailClient } from "@/components/product/ProductDetailClient";
-import { ProductCardData } from "@/components/ui/ProductCard";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { SidePromoBanner } from "@/components/ui/SidePromoBanner";
+import { getProductBySlug, getRelatedProducts, getCategories } from "@/lib/data/server";
 import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
 
-async function fetchProduct(slug: string) {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/products/${slug}`, {
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.data ?? null;
-  } catch { return null; }
-}
-
-async function fetchRelated(categoryId: string, currentSlug: string) {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/products?categoryId=${categoryId}&pageSize=4`, {
-      next: { revalidate: 600 },
-    });
-    const json = await res.json();
-    const products: ProductCardData[] = json.data ?? [];
-    return products.filter((p) => p.slug !== currentSlug).slice(0, 4);
-  } catch { return []; }
-}
-
-async function fetchCategories() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, { next: { revalidate: 3600 } });
-    const json = await res.json();
-    return json.data ?? [];
-  } catch { return []; }
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await fetchProduct(slug);
+  const product = await getProductBySlug(slug);
   if (!product) return { title: "Product Not Found" };
   return {
     title: `${product.title} | Rawaq`,
@@ -59,11 +29,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
   const locale = await getLocale();
-  const [product, categories] = await Promise.all([fetchProduct(slug), fetchCategories()]);
+  const [product, categories] = await Promise.all([getProductBySlug(slug), getCategories()]);
 
   if (!product) notFound();
 
-  const relatedProducts = await fetchRelated(product.categoryId, slug);
+  const relatedProducts = await getRelatedProducts(product.categoryId, slug);
 
   // Normalize numeric fields from Prisma (Decimal → number)
   const normalized = {
@@ -86,7 +56,7 @@ export default async function ProductPage({ params }: PageProps) {
       "@type": "Offer",
       price: normalized.salePrice ?? normalized.price,
       priceCurrency: "SAR",
-      availability: normalized.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      availability: normalized.inventoryCount > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     }
   };
 
@@ -118,7 +88,7 @@ export default async function ProductPage({ params }: PageProps) {
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="flex-1">
-              <ProductDetailClient product={normalized} />
+              <ProductDetailClient product={normalized as any} />
             </div>
             
             {/* Sidebar Promo */}

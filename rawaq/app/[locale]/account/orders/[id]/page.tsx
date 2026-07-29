@@ -7,16 +7,11 @@ import { Link } from "@/lib/i18n/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Image from "next/image";
+import { getCategories } from "@/lib/data/server";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Order Details | Rawaq" };
 
-async function getCategories() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/categories`, { next: { revalidate: 3600 } });
-    return (await res.json()).data ?? [];
-  } catch { return []; }
-}
 
 const statusColors: Record<string, string> = {
   PENDING:   "bg-amber-100 text-amber-800",
