@@ -144,7 +144,7 @@ export default function AdminCustomerDetailPage({ params }: { params: Promise<{ 
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <Link href="/admin/orders" className="text-[var(--color-brand-gold)] font-medium hover:underline">
+                            <Link href={`/admin/orders/${o.id}` as Parameters<typeof Link>[0]["href"]} className="text-[var(--color-brand-gold)] font-medium hover:underline">
                               View
                             </Link>
                           </td>
