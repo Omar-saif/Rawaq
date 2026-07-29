@@ -50,6 +50,7 @@ export default function CheckoutPage() {
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [vendors, setVendors] = useState<any[]>([]);
+  const [vendorsLoading, setVendorsLoading] = useState(true);
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
 
   // Fetch delivery vendors
@@ -61,7 +62,8 @@ export default function CheckoutPage() {
         setVendors(v);
         if (v.length > 0) setSelectedVendorId(v[0].id);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setVendorsLoading(false));
   }, []);
 
   // Redirect empty cart
@@ -339,8 +341,10 @@ export default function CheckoutPage() {
                       <h3 className="text-sm font-bold text-[var(--color-brand-navy)] mb-4">
                         {locale === "ar" ? "طريقة التوصيل" : "Delivery Method"}
                       </h3>
-                      {vendors.length === 0 ? (
+                      {vendorsLoading ? (
                         <p className="text-sm text-[var(--color-muted)]">{locale === "ar" ? "جاري تحميل طرق التوصيل..." : "Loading delivery options..."}</p>
+                      ) : vendors.length === 0 ? (
+                        <p className="text-sm text-red-500">{locale === "ar" ? "لا توجد طرق توصيل متاحة حالياً." : "No delivery options available right now."}</p>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {vendors.map((vendor) => (

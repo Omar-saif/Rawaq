@@ -468,6 +468,48 @@ async function main() {
   console.log("   RAWAQ10  — 10% off, min cart 100 SAR");
   console.log("   WELCOME50 — 50 SAR off, min cart 200 SAR");
 
+  // ── Delivery Vendors ────────────────────────────────────────────────────────
+  const vendor1 = await prisma.deliveryVendor.upsert({
+    where: { name: "Aramex Standard" },
+    update: {},
+    create: {
+      name: "Aramex Standard",
+      nameAr: "أرامكس العادي",
+      price: 25,
+      estimatedDays: "3-5 Business Days",
+      estimatedDaysAr: "٣-٥ أيام عمل",
+      isActive: true,
+    },
+  });
+
+  const vendor2 = await prisma.deliveryVendor.upsert({
+    where: { name: "SMSA Express" },
+    update: {},
+    create: {
+      name: "SMSA Express",
+      nameAr: "سمسا السريع",
+      price: 45,
+      estimatedDays: "1-2 Business Days",
+      estimatedDaysAr: "١-٢ أيام عمل",
+      isActive: true,
+    },
+  });
+
+  const vendor3 = await prisma.deliveryVendor.upsert({
+    where: { name: "Rawaq Local (Riyadh Only)" },
+    update: {},
+    create: {
+      name: "Rawaq Local (Riyadh Only)",
+      nameAr: "توصيل رواق (الرياض فقط)",
+      price: 15,
+      estimatedDays: "Same Day Delivery",
+      estimatedDaysAr: "توصيل في نفس اليوم",
+      isActive: true,
+    },
+  });
+
+  console.log("✅ Delivery vendors created:", vendor1.name, vendor2.name, vendor3.name);
+
   // ── Hero Slides ───────────────────────────────────────────────────────────
   const slidesData = [
     {
