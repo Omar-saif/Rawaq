@@ -35,7 +35,7 @@ export default function ContactPage() {
     { icon: "📧", label: locale === "ar" ? "البريد الإلكتروني" : "Email", value: "support@rawaq.sa", href: "mailto:support@rawaq.sa" },
     { icon: "📱", label: locale === "ar" ? "واتساب" : "WhatsApp", value: "+966 5X XXX XXXX", href: "https://wa.me/966500000000" },
     { icon: "🕐", label: locale === "ar" ? "ساعات العمل" : "Working Hours", value: locale === "ar" ? "الأحد – الخميس · 9ص – 6م" : "Sun – Thu · 9AM – 6PM", href: undefined },
-    { icon: "📍", label: locale === "ar" ? "المقر" : "Location", value: locale === "ar" ? "الرياض، المملكة العربية السعودية" : "Riyadh, Saudi Arabia", href: undefined },
+    { icon: "📍", label: locale === "ar" ? "المقر" : "Location", value: locale === "ar" ? "دكا، بنغلاديش" : "Dhaka, Bangladesh", href: undefined },
   ];
 
   return (
