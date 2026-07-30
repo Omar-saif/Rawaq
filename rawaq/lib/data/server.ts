@@ -87,7 +87,7 @@ interface GetProductsOptions {
   minPrice?: number;
   maxPrice?: number;
   sort?: SortOption;
-  attribute?: string;
+  attribute?: string | string[];
   page?: number;
   pageSize?: number;
 }
@@ -138,9 +138,19 @@ export async function getProducts(options: GetProductsOptions = {}) {
 
   // Attribute filter
   if (attribute) {
-    const [attrType, attrValue] = attribute.split(":");
-    if (attrType && attrValue) {
-      where.variants = { some: { variantType: attrType, value: attrValue } };
+    const attrs = Array.isArray(attribute) ? attribute : [attribute];
+    const andConditions = attrs
+      .map((attr) => {
+        const [attrType, attrValue] = attr.split(":");
+        if (attrType && attrValue) {
+          return { variants: { some: { variantType: attrType, value: attrValue } } };
+        }
+        return null;
+      })
+      .filter(Boolean) as Prisma.ProductWhereInput[];
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
   }
 
