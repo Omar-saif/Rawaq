@@ -23,14 +23,35 @@ export function FilterSidebar({ categories = [], showCategoryFilter = false, att
   const currentCategory = searchParams.get("categorySlug") || "";
   const currentMin = searchParams.get("minPrice") || "";
   const currentMax = searchParams.get("maxPrice") || "";
-  const currentAttribute = searchParams.get("attribute") || ""; // e.g. "size:52"
+  const currentAttributes = searchParams.getAll("attribute");
 
-  
   const handleUpdate = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set(key, value);
     else params.delete(key);
     // Reset page to 1 on filter change
+    params.delete("page");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleUpdateAttribute = (typeKey: string, newValue: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const currentAttrs = params.getAll("attribute");
+    
+    // Remove the one matching this typeKey
+    const filteredAttrs = currentAttrs.filter(a => !a.startsWith(`${typeKey}:`));
+    
+    // Delete all from URL
+    params.delete("attribute");
+    
+    // Add back the filtered ones
+    filteredAttrs.forEach(a => params.append("attribute", a));
+    
+    // Add the new one if provided
+    if (newValue) {
+      params.append("attribute", `${typeKey}:${newValue}`);
+    }
+    
     params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -110,19 +131,19 @@ export function FilterSidebar({ categories = [], showCategoryFilter = false, att
                     <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
                       {attr.options?.map((opt: string) => {
                         const val = `${attr.key}:${opt}`;
-                        const isChecked = currentAttribute === val;
+                        const isChecked = currentAttributes.includes(val);
                         return (
                           <label key={opt} className="flex items-center gap-2 cursor-pointer">
                             <input 
                               type="radio" 
-                              name="attribute"
+                              name={`attribute-${attr.key}`}
                               checked={isChecked}
-                              onChange={() => handleUpdate("attribute", isChecked ? "" : val)}
+                              onChange={() => handleUpdateAttribute(attr.key, opt)}
                               onClick={(e) => {
                                 // Allow deselecting radio
                                 if (isChecked) {
                                   e.preventDefault();
-                                  handleUpdate("attribute", "");
+                                  handleUpdateAttribute(attr.key, "");
                                 }
                               }}
                               className="accent-[var(--color-brand-navy)] rounded-full"

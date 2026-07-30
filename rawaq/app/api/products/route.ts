@@ -18,7 +18,6 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   const minPrice = searchParams.get("minPrice") ? parseFloat(searchParams.get("minPrice")!) : undefined;
   const maxPrice = searchParams.get("maxPrice") ? parseFloat(searchParams.get("maxPrice")!) : undefined;
   const sort = (searchParams.get("sort") ?? "newest") as (typeof SortOptions)[number];
-  const attribute = searchParams.get("attribute"); // e.g. "size:52" or "scent_family:Oud"
 
   const { page, pageSize, skip } = parsePagination(searchParams);
 
@@ -49,13 +48,25 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   }
 
   // Attribute filter (stored in variants)
-  // e.g. attribute=size:52 → filter by variant with variantType=size AND value=52
-  if (attribute) {
-    const [attrType, attrValue] = attribute.split(":");
-    if (attrType && attrValue) {
-      where.variants = {
-        some: { variantType: attrType, value: attrValue },
-      };
+  // e.g. attribute=size:52 & attribute=color:white
+  const attributes = searchParams.getAll("attribute");
+  if (attributes.length > 0) {
+    const andConditions = attributes
+      .map((attr) => {
+        const [attrType, attrValue] = attr.split(":");
+        if (attrType && attrValue) {
+          return {
+            variants: {
+              some: { variantType: attrType, value: attrValue },
+            },
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) as Prisma.ProductWhereInput[];
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
   }
 
