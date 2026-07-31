@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { Button } from "@/components/ui/Button";
 
 interface AuditLog {
   id: string;
@@ -16,6 +17,7 @@ interface AuditLog {
 export default function AuditLogPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pruning, setPruning] = useState(false);
 
   useEffect(() => {
     async function loadLogs() {
@@ -32,12 +34,37 @@ export default function AuditLogPage() {
     loadLogs();
   }, []);
 
+  const handlePrune = async () => {
+    if (!confirm("Are you sure you want to delete all audit logs older than 90 days?")) return;
+    setPruning(true);
+    try {
+      const res = await fetch("/api/admin/audit-logs/prune", { method: "POST" });
+      const json = await res.json();
+      if (res.ok) {
+        alert(`Successfully deleted ${json.data.deletedCount} old logs.`);
+        // Reload logs
+        const logsRes = await fetch("/api/admin/audit-logs");
+        const logsJson = await logsRes.json();
+        setLogs(logsJson.data ?? []);
+      } else {
+        alert("Failed to prune logs: " + (json.error?.message || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Network error while pruning logs.");
+    } finally {
+      setPruning(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-gray-50)] flex">
       <AdminSidebar />
       <main className="flex-1 overflow-auto">
         <header className="bg-white border-b border-[var(--color-border)] sticky top-0 z-10 px-8 py-4 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-[var(--color-brand-navy)]">Audit Log</h2>
+          <Button variant="secondary" onClick={handlePrune} loading={pruning}>
+            Clean up old logs (>90 days)
+          </Button>
         </header>
 
         <div className="p-8">
