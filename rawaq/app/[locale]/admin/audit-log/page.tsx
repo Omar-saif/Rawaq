@@ -18,21 +18,35 @@ export default function AuditLogPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [pruning, setPruning] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const fetchLogs = async (pageNum: number, append = false) => {
+    try {
+      const res = await fetch(`/api/admin/audit-logs?page=${pageNum}`);
+      const json = await res.json();
+      setLogs(prev => append ? [...prev, ...(json.data ?? [])] : (json.data ?? []));
+      setHasMore((json.meta?.page || 1) < (json.meta?.totalPages || 1));
+      setTotalCount(json.meta?.total || 0);
+    } catch (err) {
+      console.error("Failed to load audit logs:", err);
+    }
+  };
 
   useEffect(() => {
     async function loadLogs() {
-      try {
-        const res = await fetch("/api/admin/audit-logs");
-        const json = await res.json();
-        setLogs(json.data ?? []);
-      } catch (err) {
-        console.error("Failed to load audit logs:", err);
-      } finally {
-        setLoading(false);
-      }
+      await fetchLogs(1, false);
+      setLoading(false);
     }
     loadLogs();
   }, []);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchLogs(nextPage, true);
+  };
 
   const handlePrune = async () => {
     if (!confirm("Are you sure you want to delete all audit logs older than 90 days?")) return;
@@ -42,10 +56,8 @@ export default function AuditLogPage() {
       const json = await res.json();
       if (res.ok) {
         alert(`Successfully deleted ${json.data.deletedCount} old logs.`);
-        // Reload logs
-        const logsRes = await fetch("/api/admin/audit-logs");
-        const logsJson = await logsRes.json();
-        setLogs(logsJson.data ?? []);
+        setPage(1);
+        await fetchLogs(1, false);
       } else {
         alert("Failed to prune logs: " + (json.error?.message || "Unknown error"));
       }
@@ -61,7 +73,7 @@ export default function AuditLogPage() {
       <AdminSidebar />
       <main className="flex-1 overflow-auto">
         <header className="bg-white border-b border-[var(--color-border)] sticky top-0 z-10 px-8 py-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-[var(--color-brand-navy)]">Audit Log</h2>
+          <h2 className="text-2xl font-bold text-[var(--color-brand-navy)]">Audit Log ({totalCount})</h2>
           <Button variant="secondary" onClick={handlePrune} loading={pruning}>
             Clean up old logs (>90 days)
           </Button>
@@ -112,6 +124,13 @@ export default function AuditLogPage() {
                   ))}
                 </tbody>
               </table>
+            )}
+            {hasMore && (
+              <div className="p-4 flex justify-center border-t border-gray-100 bg-gray-50/30">
+                <Button variant="secondary" onClick={handleLoadMore}>
+                  Load More
+                </Button>
+              </div>
             )}
           </div>
         </div>
