@@ -15,6 +15,10 @@ export function ProductReviews({ slug }: ProductReviewsProps) {
   
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [avgRating, setAvgRating] = useState("0.0");
   
   const [formOpen, setFormOpen] = useState(false);
   const [rating, setRating] = useState(5);
@@ -22,17 +26,26 @@ export function ProductReviews({ slug }: ProductReviewsProps) {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchReviews = useCallback(async () => {
+  const fetchReviews = useCallback(async (pageNum: number, append = false) => {
     setLoading(true);
-    const res = await fetch(`/api/products/${slug}/reviews`);
+    const res = await fetch(`/api/products/${slug}/reviews?page=${pageNum}`);
     if (res.ok) {
       const json = await res.json();
-      setReviews(json.data ?? []);
+      setReviews(prev => append ? [...prev, ...(json.data ?? [])] : (json.data ?? []));
+      setHasMore((json.meta?.page || 1) < (json.meta?.totalPages || 1));
+      setTotalCount(json.meta?.total || 0);
+      setAvgRating(Number(json.meta?.averageRating || 0).toFixed(1));
     }
     setLoading(false);
   }, [slug]);
 
-  useEffect(() => { fetchReviews(); }, [fetchReviews]);
+  useEffect(() => { fetchReviews(1, false); }, [fetchReviews]);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchReviews(nextPage, true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +66,8 @@ export function ProductReviews({ slug }: ProductReviewsProps) {
         setTitle("");
         setComment("");
         setRating(5);
-        fetchReviews();
+        setPage(1);
+        fetchReviews(1, false);
       } else {
         if (res.status === 401) {
           addToast("error", locale === "ar" ? "يجب تسجيل الدخول" : "Please login to review");
@@ -70,10 +84,6 @@ export function ProductReviews({ slug }: ProductReviewsProps) {
     }
   };
 
-  const avgRating = reviews.length > 0 
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-    : 0;
-
   return (
     <div className="mt-16 border-t border-[var(--color-border)] pt-12">
       <div className="flex items-center justify-between mb-8">
@@ -81,11 +91,11 @@ export function ProductReviews({ slug }: ProductReviewsProps) {
           <h2 className="text-2xl font-bold text-[var(--color-brand-navy)]">
             {locale === "ar" ? "تقييمات العملاء" : "Customer Reviews"}
           </h2>
-          {reviews.length > 0 && (
+          {totalCount > 0 && (
             <div className="flex items-center gap-2 mt-2">
               <span className="text-xl text-yellow-400">{"★".repeat(Math.round(Number(avgRating)))}</span>
               <span className="text-sm font-bold">{avgRating} / 5</span>
-              <span className="text-sm text-[var(--color-muted)]">({reviews.length} {locale === "ar" ? "تقييمات" : "reviews"})</span>
+              <span className="text-sm text-[var(--color-muted)]">({totalCount} {locale === "ar" ? "تقييمات" : "reviews"})</span>
             </div>
           )}
         </div>
@@ -141,7 +151,7 @@ export function ProductReviews({ slug }: ProductReviewsProps) {
         </form>
       )}
 
-      {loading ? (
+      {loading && reviews.length === 0 ? (
         <div className="text-[var(--color-muted)]">Loading reviews...</div>
       ) : reviews.length === 0 ? (
         <div className="text-center py-10 bg-[var(--color-gray-50)] rounded-[var(--radius-xl)]">
@@ -165,6 +175,13 @@ export function ProductReviews({ slug }: ProductReviewsProps) {
               </div>
             </div>
           ))}
+          {hasMore && (
+            <div className="pt-4 flex justify-center">
+              <Button variant="secondary" onClick={handleLoadMore} loading={loading}>
+                {locale === "ar" ? "عرض المزيد" : "Load More"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
