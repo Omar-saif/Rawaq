@@ -203,3 +203,4 @@ type AttributeDefinition = {
 - [Task 2.1] Chose custom JWT (jose) + httpOnly cookies over NextAuth — simpler for guest checkout, no OAuth needed initially, easier webhook auth in Phase 11
 - [Task 1.3] Added `nameAr`/`titleAr`/`descriptionAr` bilingual fields directly on Category/Product models — avoids a separate translations table for simplicity; can be migrated to a proper i18n table if more languages are needed
 - [Task Hero] Added `Slide` model — replaces earlier product/category flag-based home hero approach; slides are fully managed from `/admin/slides` with drag-to-reorder, isActive toggle, and optional `startsAt`/`endsAt` schedule fields so seasonal banners auto-expire without code changes
+- [Task Pixel] Abstracted Meta Pixel into a dedicated `fpixel.ts` utility and `CookieConsentBanner` — ensures GDPR compliance and centralizes CAPI readiness without cluttering product components

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/lib/i18n/navigation";
 import { Button } from "@/components/ui/Button";
+import { event } from "@/lib/utils/fpixel";
 
 interface OrderConfirmationClientProps {
   locale: string;
@@ -18,8 +19,41 @@ export default function OrderConfirmationClient({ locale }: OrderConfirmationCli
   useEffect(() => {
     // Small delay for animation
     const t = setTimeout(() => setTick(true), 100);
+    
+    if (orderId) {
+      const trackPurchase = async () => {
+        try {
+          const storageKey = `rawaq_purchase_tracked_${orderId}`;
+          if (localStorage.getItem(storageKey)) return;
+
+          const endpoint = email 
+            ? `/api/orders/lookup?orderId=${orderId}&email=${encodeURIComponent(email)}`
+            : `/api/account/orders/${orderId}`;
+            
+          const res = await fetch(endpoint);
+          if (!res.ok) return;
+          
+          const json = await res.json();
+          const order = json.data;
+          
+          if (order && order.total !== undefined) {
+            event("Purchase", {
+              content_ids: order.items?.map((i: any) => i.product?.sku || i.product?.id) || [],
+              value: order.total,
+              currency: "SAR"
+            });
+            localStorage.setItem(storageKey, "true");
+          }
+        } catch (err) {
+          console.error("Failed to track purchase", err);
+        }
+      };
+      
+      trackPurchase();
+    }
+    
     return () => clearTimeout(t);
-  }, []);
+  }, [orderId, email]);
 
   return (
     <div className="max-w-lg w-full text-center">

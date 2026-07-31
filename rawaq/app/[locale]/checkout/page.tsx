@@ -11,6 +11,7 @@ import { PriceTag } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Modal";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { event } from "@/lib/utils/fpixel";
 
 type Step = "info" | "review";
 
@@ -66,10 +67,21 @@ export default function CheckoutPage() {
       .finally(() => setVendorsLoading(false));
   }, []);
 
-  // Redirect empty cart
+  const hasTrackedCheckout = React.useRef(false);
+
+  // Redirect empty cart & track InitiateCheckout
   useEffect(() => {
-    if (items.length === 0) router.push("/cart");
-  }, [items, router]);
+    if (items.length === 0) {
+      router.push("/cart");
+    } else if (!hasTrackedCheckout.current) {
+      hasTrackedCheckout.current = true;
+      event("InitiateCheckout", {
+        content_ids: items.map(i => i.sku),
+        value: subtotal,
+        currency: "SAR"
+      });
+    }
+  }, [items, router, subtotal]);
 
   // Check auth & load saved addresses
   useEffect(() => {

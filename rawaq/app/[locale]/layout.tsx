@@ -6,6 +6,8 @@ import type { Metadata } from "next";
 import { CartProvider } from "@/components/layout/CartContext";
 import { CartDrawer } from "@/components/layout/CartDrawer";
 import { ToastProvider } from "@/components/ui/Modal";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { CookieConsentBanner } from "@/components/analytics/CookieConsentBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -58,9 +60,11 @@ export default async function LocaleLayout({
             <ToastProvider>
               {children}
               <CartDrawer />
+              <CookieConsentBanner />
             </ToastProvider>
           </CartProvider>
         </NextIntlClientProvider>
+        <MetaPixel />
       </body>
     </html>
   );

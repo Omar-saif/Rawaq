@@ -10,6 +10,7 @@ import { useCart } from "@/components/layout/CartContext";
 import { useToast } from "@/components/ui/Modal";
 import { ProductLightbox } from "./ProductLightbox";
 import { ProductReviews } from "./ProductReviews";
+import { event } from "@/lib/utils/fpixel";
 
 interface Variant {
   id: string;
@@ -60,6 +61,17 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [adding, setAdding] = useState(false);
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  // Track ViewContent on mount
+  React.useEffect(() => {
+    event("ViewContent", {
+      content_ids: [product.sku], // Or product.id, using sku as it's common for e-com
+      content_name: title,
+      content_category: product.category.slug,
+      value: product.salePrice ?? product.price,
+      currency: "SAR"
+    });
+  }, [product.sku, title, product.category.slug, product.salePrice, product.price]);
 
   const title = locale === "ar" && product.titleAr ? product.titleAr : product.title;
   const description = locale === "ar" && product.descriptionAr ? product.descriptionAr : product.description;

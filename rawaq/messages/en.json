@@ -175,5 +175,10 @@
     "totalOrders": "Total Orders",
     "totalProducts": "Total Products",
     "recentOrders": "Recent Orders"
+  },
+  "cookieConsent": {
+    "message": "We use cookies to improve your experience and for marketing purposes. By continuing to use this site, you accept our use of cookies.",
+    "accept": "Accept",
+    "decline": "Decline"
   }
 }

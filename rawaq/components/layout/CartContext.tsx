@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, useEffect, useState } from "react";
+import { event } from "@/lib/utils/fpixel";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface CartItem {
@@ -214,6 +215,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = async (item: CartItem) => {
     dispatch({ type: "ADD_ITEM", payload: item });
+    
+    // Fire AddToCart event
+    event("AddToCart", {
+      content_ids: [item.sku],
+      content_name: item.title,
+      value: item.price * item.quantity,
+      currency: "SAR"
+    });
+
     if (isAuth) {
       try {
         await fetch("/api/cart/items", {
