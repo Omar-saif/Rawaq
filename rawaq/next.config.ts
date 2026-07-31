@@ -8,8 +8,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "images.unsplash.com",
       },
+      // Add your cloud storage domain here (e.g. Supabase, AWS S3, Vercel Blob)
     ],
   },
   async headers() {
