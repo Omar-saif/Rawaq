@@ -39,7 +39,6 @@ export function SidePromoBanner({ pageType }: { pageType: string }) {
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 300px"
-              unoptimized
             />
           </div>
         );

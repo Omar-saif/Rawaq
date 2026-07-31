@@ -141,7 +141,6 @@ export function ProductLightbox({ images, initialIndex, onClose, isRtl }: Produc
               className="object-contain select-none"
               sizes="100vw"
               priority
-              unoptimized
             />
           </div>
         </div>
@@ -155,7 +154,7 @@ export function ProductLightbox({ images, initialIndex, onClose, isRtl }: Produc
               onClick={() => { setScale(1); setPosition({x:0,y:0}); setIndex(i); }}
               className={`relative w-16 h-16 shrink-0 rounded-md overflow-hidden border-2 transition-all ${index === i ? 'border-white' : 'border-transparent opacity-50 hover:opacity-100'}`}
             >
-              <Image src={img} alt={`Thumbnail ${i+1}`} fill className="object-cover" sizes="64px" unoptimized />
+              <Image src={img} alt={`Thumbnail ${i+1}`} fill className="object-cover" sizes="64px" />
             </button>
           ))}
         </div>

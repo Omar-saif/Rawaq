@@ -100,7 +100,6 @@ export function HeroSlider({ slides: initialSlides }: HeroSliderProps) {
               priority={i === 0}
               className="object-cover"
               sizes="100vw"
-              unoptimized
             />
           ) : null}
           {/* Gradient overlay always present for text legibility */}
