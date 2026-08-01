@@ -4,6 +4,7 @@ import { apiSuccess, apiError, ErrorCodes, withErrorHandler } from "@/lib/utils/
 import { requireAdmin } from "@/lib/utils/session";
 import crypto from "crypto";
 import { sendEmail, getPasswordResetEmail } from "@/lib/email";
+import { env } from "@/lib/env";
 
 export const GET = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
   await requireAdmin();
@@ -47,7 +48,7 @@ export const POST = withErrorHandler(async (req: NextRequest, ctx: unknown) => {
     data: { resetTokenHash: tokenHash, resetTokenExpiry: expiry },
   });
 
-  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/en/reset-password?token=${rawToken}`;
+  const resetUrl = `${env.NEXT_PUBLIC_APP_URL}/en/reset-password?token=${rawToken}`;
   const { subject, html } = getPasswordResetEmail(resetUrl, "en");
   await sendEmail({ to: user.email, subject, html });
 

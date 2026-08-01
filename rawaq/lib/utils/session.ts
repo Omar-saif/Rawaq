@@ -1,10 +1,9 @@
 import { cookies } from "next/headers";
 import { jwtVerify, SignJWT } from "jose";
 import { ApiException, ErrorCodes } from "./api";
+import { env } from "../env";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? "dev-secret-change-in-production"
-);
+const JWT_SECRET = new TextEncoder().encode(env.JWT_SECRET);
 
 export interface SessionPayload {
   userId: string;

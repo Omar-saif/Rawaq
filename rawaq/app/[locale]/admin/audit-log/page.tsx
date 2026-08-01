@@ -75,7 +75,7 @@ export default function AuditLogPage() {
         <header className="bg-white border-b border-[var(--color-border)] sticky top-0 z-10 px-8 py-4 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-[var(--color-brand-navy)]">Audit Log ({totalCount})</h2>
           <Button variant="secondary" onClick={handlePrune} loading={pruning}>
-            Clean up old logs (>90 days)
+            Clean up old logs (&gt;90 days)
           </Button>
         </header>
 

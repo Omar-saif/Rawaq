@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
+import { env } from "../lib/env";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://rawaq.sa";
+const BASE_URL = env.NEXT_PUBLIC_APP_URL ?? "https://rawaq.sa";
 const LOCALES = ["en", "ar"];
 
 async function getProducts() {

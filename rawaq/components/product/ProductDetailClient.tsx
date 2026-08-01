@@ -62,6 +62,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  const title = locale === "ar" && product.titleAr ? product.titleAr : product.title;
+  const description = locale === "ar" && product.descriptionAr ? product.descriptionAr : product.description;
+
   // Track ViewContent on mount
   React.useEffect(() => {
     event("ViewContent", {
@@ -72,9 +75,6 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       currency: "SAR"
     });
   }, [product.sku, title, product.category.slug, product.salePrice, product.price]);
-
-  const title = locale === "ar" && product.titleAr ? product.titleAr : product.title;
-  const description = locale === "ar" && product.descriptionAr ? product.descriptionAr : product.description;
 
   const variantGroups = groupVariants(product.variants);
   const variantTypes = Object.keys(variantGroups);

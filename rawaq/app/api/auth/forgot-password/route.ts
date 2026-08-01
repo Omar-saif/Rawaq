@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { apiSuccess, apiError, ErrorCodes, withErrorHandler } from "@/lib/utils/api";
 import { sendEmail, getPasswordResetEmail } from "@/lib/email";
+import { env } from "@/lib/env";
 
 const ForgotSchema = z.object({
   email: z.string().email(),
@@ -39,7 +40,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     data: { resetTokenHash: tokenHash, resetTokenExpiry: expiry },
   });
 
-  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/en/reset-password?token=${rawToken}`; // We can localize later based on request
+  const resetUrl = `${env.NEXT_PUBLIC_APP_URL}/en/reset-password?token=${rawToken}`; // We can localize later based on request
 
   // Send the real email
   const { subject, html } = getPasswordResetEmail(resetUrl, "en"); // Fallback to EN, can parse header for locale
