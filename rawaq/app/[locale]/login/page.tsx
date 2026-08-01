@@ -31,6 +31,10 @@ export default function LoginPage() {
       });
       const json = await res.json();
       if (!res.ok) {
+        if (json.error?.code === "UNVERIFIED_EMAIL") {
+          router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+          return;
+        }
         if (res.status === 401) setErrors({ general: json.error?.message ?? "Invalid credentials" });
         else setErrors({ general: json.error?.message ?? "Login failed" });
         return;

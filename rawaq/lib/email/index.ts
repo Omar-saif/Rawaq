@@ -38,24 +38,59 @@ export async function sendEmail({
   }
 }
 
-export function getOrderConfirmationEmail(order: any, locale: string = "en") {
+export function getOrderConfirmationEmail(order: any, locale: "en" | "ar" = "en") {
   const isAr = locale === "ar";
-  const title = isAr ? "تأكيد الطلب" : "Order Confirmation";
+  const subject = isAr ? `تأكيد طلبك #${order.id.slice(-6)}` : `Order Confirmation #${order.id.slice(-6)}`;
+
+  const itemsHtml = order.items
+    .map(
+      (item: any) =>
+        `<li>${item.quantity}x ${item.product.title} - ${item.unitPrice} SAR</li>`
+    )
+    .join("");
+
+  const html = `
+    <div style="font-family: sans-serif; direction: ${isAr ? "rtl" : "ltr"}; text-align: ${isAr ? "right" : "left"};">
+      <h1 style="color: #1a365d;">${isAr ? "شكراً لتسوقك معنا!" : "Thank you for your order!"}</h1>
+      <p>${isAr ? `لقد تم استلام طلبك بنجاح. رقم الطلب:` : `Your order has been received successfully. Order ID:`} <strong>${order.id.slice(-6)}</strong></p>
+      
+      <h3>${isAr ? "تفاصيل الطلب:" : "Order Details:"}</h3>
+      <ul>
+        ${itemsHtml}
+      </ul>
+      
+      <p><strong>${isAr ? "الإجمالي:" : "Total:"}</strong> ${order.total} SAR</p>
+      
+      <p style="margin-top: 24px; font-size: 14px; color: #666;">
+        ${isAr ? "إذا كان لديك أي استفسار، يرجى التواصل معنا." : "If you have any questions, please contact us."}
+      </p>
+    </div>
+  `;
+
+  return { subject, html };
+}
+
+export function getOtpEmail(code: string, locale: "en" | "ar" = "en") {
+  const isAr = locale === "ar";
+  const subject = isAr ? "رمز التحقق من البريد الإلكتروني" : "Your Email Verification Code";
   
-  return {
-    subject: `Rawaq | ${title} #${order.id.slice(-8).toUpperCase()}`,
-    html: `
-      <div dir="${isAr ? "rtl" : "ltr"}" style="font-family: sans-serif; color: #1a202c; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #0f172a;">${title}</h1>
-        <p>${isAr ? "شكراً لتسوقك من رواق! تم استلام طلبك بنجاح." : "Thank you for shopping at Rawaq! Your order has been successfully received."}</p>
-        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <p><strong>${isAr ? "رقم الطلب:" : "Order Number:"}</strong> #${order.id.slice(-8).toUpperCase()}</p>
-          <p><strong>${isAr ? "الإجمالي:" : "Total:"}</strong> ${parseFloat(order.total).toFixed(2)} SAR</p>
-        </div>
-        <p>${isAr ? "سوف نقوم بإعلامك عندما يتم شحن الطلب." : "We will notify you when your order is shipped."}</p>
+  const html = `
+    <div style="font-family: sans-serif; direction: ${isAr ? "rtl" : "ltr"}; text-align: ${isAr ? "right" : "left"}; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h1 style="color: #1a365d;">${isAr ? "التحقق من حسابك" : "Verify your account"}</h1>
+      <p>${isAr ? "مرحباً،" : "Hello,"}</p>
+      <p>${isAr ? "استخدم الرمز التالي للتحقق من بريدك الإلكتروني. هذا الرمز صالح لمدة 10 دقائق." : "Use the following code to verify your email address. This code is valid for 10 minutes."}</p>
+      
+      <div style="margin: 32px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px; text-align: center;">
+        <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #b89855;">${code}</span>
       </div>
-    `,
-  };
+      
+      <p style="font-size: 14px; color: #64748b;">
+        ${isAr ? "إذا لم تطلب هذا الرمز، يمكنك تجاهل هذه الرسالة." : "If you did not request this code, you can safely ignore this email."}
+      </p>
+    </div>
+  `;
+  
+  return { subject, html };
 }
 
 export function getPasswordResetEmail(resetUrl: string, locale: string = "en") {

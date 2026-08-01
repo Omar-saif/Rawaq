@@ -8,9 +8,9 @@ import {
   ErrorCodes,
   withErrorHandler,
 } from "@/lib/utils/api";
-import { signSession, setSessionCookie } from "@/lib/utils/session";
-import { sendEmail, getWelcomeEmail } from "@/lib/email";
+import { sendEmail, getOtpEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/utils/rateLimit";
+import { generateOtp, hashOtp } from "@/lib/auth/otp";
 
 const RegisterSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -51,6 +51,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       phone: data.phone,
       passwordHash,
       role: "CUSTOMER",
+      emailVerified: false,
     },
     select: {
       id: true,
@@ -61,18 +62,23 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     },
   });
 
-  // Sign a session token and set cookie
-  const token = await signSession({
-    userId: user.id,
-    email: user.email,
-    role: user.role,
-  });
-  await setSessionCookie(token);
+  // Generate OTP
+  const rawOtp = generateOtp();
+  const hashedOtp = await hashOtp(rawOtp);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-  // Send Welcome Email (fire and forget)
+  await prisma.emailOtp.create({
+    data: {
+      userId: user.id,
+      codeHash: hashedOtp,
+      expiresAt,
+    },
+  });
+
+  // Send OTP Email (fire and forget)
   const locale = req.headers.get("x-invoke-path")?.startsWith("/ar") ? "ar" : "en";
-  const { subject, html } = getWelcomeEmail(user.name, locale);
+  const { subject, html } = getOtpEmail(rawOtp, locale);
   sendEmail({ to: user.email, subject, html }).catch(console.error);
 
-  return apiSuccess({ user }, undefined, 201);
+  return apiSuccess({ requiresVerification: true, email: user.email }, undefined, 201);
 });

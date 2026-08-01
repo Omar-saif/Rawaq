@@ -44,8 +44,13 @@ export default function RegisterPage() {
         }
         return;
       }
-      addToast("success", locale === "ar" ? "تم إنشاء حسابك بنجاح!" : "Account created successfully!");
-      router.push("/account");
+      if (json.data?.requiresVerification) {
+        addToast("success", locale === "ar" ? "تم إنشاء الحساب! يرجى التحقق من بريدك الإلكتروني." : "Account created! Please verify your email.");
+        router.push(`/verify-otp?email=${encodeURIComponent(json.data.email)}`);
+      } else {
+        addToast("success", locale === "ar" ? "تم إنشاء حسابك بنجاح!" : "Account created successfully!");
+        router.push("/account");
+      }
     } catch {
       setErrors({ general: "An error occurred. Please try again." });
     } finally {

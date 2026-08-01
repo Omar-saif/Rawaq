@@ -57,6 +57,10 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     return apiError(ErrorCodes.INVALID_CREDENTIALS, "Invalid email or password", 401);
   }
 
+  if (!user.emailVerified) {
+    return apiError("UNVERIFIED_EMAIL" as any, "Please verify your email address before logging in", 403);
+  }
+
   const token = await signSession({
     userId: user.id,
     email: user.email,
